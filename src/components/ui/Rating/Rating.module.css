@@ -1,0 +1,56 @@
+.rating {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.stars {
+    display: flex;
+    gap: 2px;
+}
+
+.star {
+    color: var(--text-muted);
+    font-size: var(--text-base);
+}
+
+.starFilled {
+    color: var(--primary);
+}
+
+.starHalf {
+    position: relative;
+}
+
+.starHalf::before {
+    content: '★';
+    position: absolute;
+    color: var(--primary);
+    width: 50%;
+    overflow: hidden;
+}
+
+.score {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    margin-left: var(--space-1);
+}
+
+.count {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+/* Sizes */
+.sm .star {
+    font-size: var(--text-sm);
+}
+
+.lg .star {
+    font-size: var(--text-xl);
+}
+
+.lg .score {
+    font-size: var(--text-lg);
+}

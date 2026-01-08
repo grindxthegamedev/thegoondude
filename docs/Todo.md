@@ -4,46 +4,44 @@
 
 ---
 
-## 📋 Phase 1: Foundation
+## 📋 Phase 1: Foundation ✅
 
 ### Project Setup
-- [ ] Initialize Next.js 14 with App Router
-- [ ] Configure TypeScript
-- [ ] Set up CSS module structure
-- [ ] Install dependencies (firebase, lucide-react, etc.)
-- [ ] Create folder structure
-- [ ] Set up ESLint & Prettier
+- [x] Initialize Next.js 14 with App Router
+- [x] Configure TypeScript
+- [x] Set up CSS module structure
+- [x] Create folder structure
+- [x] Set up ESLint
 
 ### Design System Implementation
-- [ ] Create CSS variables (tokens)
-- [ ] Build base reset/normalize
-- [ ] Create typography styles
-- [ ] Build utility classes
-- [ ] Create component base styles
+- [x] Create CSS variables (tokens)
+- [x] Build base reset/normalize
+- [x] Create typography styles
+- [x] Build utility classes (split into layout.css + visual.css)
 
 ### Core Components
-- [ ] Header/Navigation
-- [ ] Footer
-- [ ] Button component
-- [ ] Card component
-- [ ] Badge/Tag component
-- [ ] Rating stars component
+- [x] Header/Navigation
+- [x] Footer
+- [x] Button component (4 variants, 3 sizes)
+- [x] Badge/Tag component (6 variants)
+- [x] Rating stars component
+- [x] SiteListing component (411-style rows)
 - [ ] Loading skeleton
 - [ ] Modal component
 
 ---
 
-## 📋 Phase 2: Pages
+## 📋 Phase 2: Pages (In Progress)
 
 ### Homepage
-- [ ] Hero section with tagline
-- [ ] Featured sites grid
-- [ ] Category navigation
-- [ ] Latest reviews section
-- [ ] CTA for submissions
+- [x] Hero section with tagline
+- [x] Category navigation pills
+- [x] Top rated section (API-ready)
+- [x] New additions section (API-ready)
+- [x] CTA for submissions
 
 ### Directory Pages
-- [ ] `/sites` - Main listing page
+- [/] `/sites` - Main listing page (structure ready)
 - [ ] Category filter sidebar
 - [ ] Sort options (rating, date, etc.)
 - [ ] Pagination/infinite scroll
@@ -56,158 +54,98 @@
 - [ ] Review content (markdown render)
 - [ ] Pros/Cons section
 - [ ] Verdict box
-- [ ] Related sites section
-- [ ] SEO meta tags
 
 ### Submission Flow
 - [ ] `/submit` - Submission form
 - [ ] URL validation
 - [ ] Category selection
-- [ ] Description textarea
 - [ ] Terms acceptance
-- [ ] Payment placeholder (TBD processor)
-- [ ] Confirmation page
+- [ ] Payment placeholder
 
 ---
 
-## 📋 Phase 3: Backend
+## 📋 Phase 3: Backend (Current Focus)
 
 ### Firebase Setup
-- [ ] Create Firebase project
-- [ ] Configure Firestore
+- [/] Create Firebase project structure
+- [ ] Configure Firestore collections
 - [ ] Set up Firebase Auth
 - [ ] Configure Cloud Functions
 - [ ] Set up Firebase Storage (screenshots)
 
-### API Routes (Next.js)
-- [ ] `POST /api/submit` - Site submission
-- [ ] `GET /api/sites` - List sites
-- [ ] `GET /api/sites/[id]` - Get site details
-- [ ] `GET /api/categories` - List categories
+### API Layer
+- [/] Create API hooks structure
+- [ ] `useSites()` - Fetch sites with filters
+- [ ] `useSite(slug)` - Fetch single site
+- [ ] `useCategories()` - Fetch categories
+- [ ] `useSubmission()` - Submit new site
 
-### Cloud Functions
-- [ ] Trigger on new submission
-- [ ] Queue management
-- [ ] Status webhooks
+### Next.js API Routes
+- [ ] `GET /api/sites` - List sites
+- [ ] `GET /api/sites/[slug]` - Get site details
+- [ ] `POST /api/submit` - Site submission
+- [ ] `GET /api/categories` - List categories
 
 ---
 
 ## 📋 Phase 4: AI Pipeline
 
 ### Crawler Agent
-- [ ] Set up Puppeteer in Cloud Functions
-- [ ] Screenshot capture logic
-- [ ] SEO extraction (meta tags)
-- [ ] Mobile responsiveness check
+- [ ] Puppeteer in Cloud Functions
+- [ ] Screenshot capture
+- [ ] SEO extraction
 - [ ] Performance metrics
 
-### Analysis Agent
-- [ ] Gemini API integration (Vertex AI)
-- [ ] Screenshot analysis prompt
-- [ ] Feature extraction
+### Analysis Agent (Gemini)
+- [ ] Screenshot analysis
 - [ ] Pros/cons generation
 - [ ] Rating calculation
 
-### Writer Agent
+### Writer Agent (Gemini)
 - [ ] Review generation prompt
-- [ ] PornDude style guide
-- [ ] Content structure template
+- [ ] PornDude style
 - [ ] SEO optimization
-- [ ] Output validation
-
-### Pipeline Orchestration
-- [ ] Queue processing
-- [ ] Error handling
-- [ ] Retry logic
-- [ ] Status updates
-- [ ] Notification triggers
 
 ---
 
 ## 📋 Phase 5: Admin
 
-### Admin Dashboard
-- [ ] `/admin` - Overview stats
+- [ ] `/admin` - Dashboard
 - [ ] Pending reviews queue
-- [ ] Quick approve/reject
-- [ ] Revenue tracking
-
-### Site Management
-- [ ] `/admin/sites` - All sites table
-- [ ] Edit site details
-- [ ] Edit/regenerate review
-- [ ] Publish/unpublish toggle
-- [ ] Delete with confirmation
-
-### User Management
-- [ ] `/admin/users` - User list
-- [ ] View user submissions
-- [ ] Ban/unban user
+- [ ] Site management
+- [ ] User management
 
 ---
 
 ## 📋 Phase 6: Polish
 
-### User Features
 - [ ] User authentication
 - [ ] User dashboard
-- [ ] Submission history
-- [ ] Email notifications
-
-### Search
-- [ ] Full-text search
-- [ ] Algolia or Firestore search
-- [ ] Search results page
-- [ ] Autocomplete
-
-### Performance
-- [ ] Image optimization
-- [ ] Lazy loading
-- [ ] Code splitting
-- [ ] Core Web Vitals audit
-
-### SEO
-- [ ] XML sitemap
-- [ ] Robots.txt
-- [ ] JSON-LD structured data
-- [ ] OpenGraph images
+- [ ] Search functionality
+- [ ] SEO (sitemap, JSON-LD)
+- [ ] Performance optimization
 
 ---
 
-## 📋 Phase 7: Launch Prep
+## 📋 Phase 7: Launch
 
-### Security
 - [ ] Age verification gate
-- [ ] Rate limiting
-- [ ] Input sanitization
-- [ ] CORS configuration
-
-### Legal
-- [ ] Terms of Service
-- [ ] Privacy Policy
-- [ ] 2257 statement
-- [ ] DMCA process
-
-### Deployment
-- [ ] Firebase hosting setup
-- [ ] Domain configuration
-- [ ] SSL verification
-- [ ] Environment variables
+- [ ] Legal pages (ToS, Privacy)
+- [ ] Firebase hosting
+- [ ] Domain setup
 
 ---
 
 ## 🐛 Bugs / Issues
 
-_None yet - project starting_
+_None yet_
 
 ---
 
 ## 💡 Future Ideas
 
-- [ ] Affiliate link system
-- [ ] Premium featured listings
-- [ ] Site owner verification
-- [ ] Community ratings/comments
+- [ ] Affiliate links
+- [ ] Premium listings
+- [ ] Community ratings
 - [ ] Newsletter
 - [ ] API for partners
-- [ ] Mobile app
