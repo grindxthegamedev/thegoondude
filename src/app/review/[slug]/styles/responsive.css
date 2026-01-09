@@ -1,0 +1,37 @@
+/**
+ * Review Page - Responsive Styles
+ */
+
+@media (min-width: 768px) {
+    .page {
+        padding: var(--space-6);
+    }
+
+    .hero {
+        margin-bottom: var(--space-8);
+    }
+
+    .title {
+        font-size: var(--text-3xl);
+    }
+
+    .excerpt {
+        font-size: var(--text-lg);
+    }
+
+    .ratingScore {
+        font-size: var(--text-3xl);
+    }
+
+    .proscons {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .verdict {
+        padding: var(--space-6);
+    }
+
+    .verdictTitle {
+        font-size: var(--text-xl);
+    }
+}

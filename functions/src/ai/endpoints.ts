@@ -12,6 +12,7 @@ import { analyzeSite } from './analyzer';
 import { crawlSite } from './crawler';
 import { uploadScreenshots } from './storage';
 import { buildAnalysisContext } from './prompts';
+import { analyzeScreenshots, buildVisionContext } from './visionAnalyzer';
 
 // Initialize Firebase Admin if not already
 if (!admin.apps.length) {
@@ -123,10 +124,12 @@ export const processFullReview = onRequest(
             });
 
             // Step 2: Crawl
-            logger.info('Step 1/4: Crawling...');
+            logger.info('Step 1/5: Crawling...');
             let crawlData = null;
+            let screenshotBuffers: Buffer[] = [];
             try {
                 const crawl = await crawlSite(siteData.url);
+                screenshotBuffers = crawl.screenshots;
                 const screenshotUrls = await uploadScreenshots(crawl.screenshots, siteId);
                 crawlData = {
                     screenshotUrls,
@@ -139,27 +142,35 @@ export const processFullReview = onRequest(
                 logger.error('Crawl failed (continuing):', crawlErr);
             }
 
-            // Step 3: Analyze
-            logger.info('Step 2/4: Analyzing...');
+            // Step 3: Vision Analysis
+            logger.info('Step 2/5: Vision analysis...');
+            const visionAnalysis = await analyzeScreenshots(screenshotBuffers);
+            const visionContext = buildVisionContext(visionAnalysis);
+            logger.info('Vision analysis complete:', visionAnalysis.layoutQuality);
+
+            // Step 4: Text Analysis
+            logger.info('Step 3/5: Text analysis...');
             const siteInfo = {
                 name: siteData.name, url: siteData.url,
                 category: siteData.category, description: siteData.description,
             };
             const analysis = await analyzeSite(siteInfo);
 
-            // Step 4: Generate review
-            logger.info('Step 3/4: Writing review...');
+            // Step 5: Generate review (with vision context)
+            logger.info('Step 4/5: Writing review...');
             const analysisContext = buildAnalysisContext(analysis);
-            const review = await generateReview(siteInfo, analysisContext);
+            const fullContext = `${analysisContext}\n\n${visionContext}`;
+            const review = await generateReview(siteInfo, fullContext);
 
             // Clean content before saving
             review.content = cleanReviewContent(review.content);
 
-            // Step 5: Publish
-            logger.info('Step 4/4: Publishing...');
+            // Step 6: Publish
+            logger.info('Step 5/5: Publishing...');
             await db.collection('sites').doc(siteId).update({
                 crawlData,
                 analysis,
+                visionAnalysis,
                 review: { ...review, generatedBy: 'ai-full', generatedAt: FieldValue.serverTimestamp() },
                 rating: review.rating,
                 status: 'published',
@@ -167,7 +178,7 @@ export const processFullReview = onRequest(
             });
 
             logger.info('Pipeline complete:', siteData.name, 'Rating:', review.rating);
-            res.json({ success: true, crawlData, analysis, review });
+            res.json({ success: true, crawlData, analysis, visionAnalysis, review });
         } catch (error) {
             logger.error('Full pipeline error:', error);
             res.status(500).json({ error: 'Failed to process review' });

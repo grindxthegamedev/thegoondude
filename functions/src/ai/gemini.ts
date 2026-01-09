@@ -103,3 +103,36 @@ export function getAnalysisModel() {
         },
     });
 }
+
+// Response schema for vision analysis
+export const VISION_SCHEMA = {
+    type: SchemaType.OBJECT,
+    properties: {
+        layoutQuality: { type: SchemaType.STRING },
+        colorScheme: { type: SchemaType.STRING },
+        contentDensity: { type: SchemaType.STRING },
+        adDensity: { type: SchemaType.STRING },
+        uiObservations: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        visualPros: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        visualCons: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    },
+    required: ['layoutQuality', 'colorScheme', 'contentDensity', 'uiObservations'],
+};
+
+/**
+ * Get generative model for vision/screenshot analysis
+ */
+export function getVisionModel() {
+    logger.info('Getting vision model:', MODEL);
+    return getVertexAI().getGenerativeModel({
+        model: MODEL,
+        safetySettings: SAFETY_SETTINGS,
+        generationConfig: {
+            maxOutputTokens: 2048,
+            temperature: 0.5,
+            topP: 0.9,
+            responseMimeType: 'application/json',
+            responseSchema: VISION_SCHEMA,
+        },
+    });
+}

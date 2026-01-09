@@ -1,0 +1,92 @@
+/**
+ * Review Page - Pros/Cons & Verdict Styles
+ */
+
+.proscons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.prosBox,
+.consBox {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.prosBox {
+    background: rgba(74, 222, 128, 0.08);
+    border-color: var(--success);
+}
+
+.consBox {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: var(--error);
+}
+
+.boxTitle {
+    font-family: var(--font-heading);
+    font-weight: var(--font-semibold);
+    margin-bottom: var(--space-3);
+}
+
+.prosBox .boxTitle {
+    color: var(--success);
+}
+
+.consBox .boxTitle {
+    color: var(--error);
+}
+
+.boxList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.boxList li {
+    padding: var(--space-2) 0;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.prosBox .boxList li::before {
+    content: '✓ ';
+    color: var(--success);
+}
+
+.consBox .boxList li::before {
+    content: '✗ ';
+    color: var(--error);
+}
+
+/* Verdict */
+.verdict {
+    background: var(--bg-surface);
+    padding: var(--space-5);
+    border-radius: var(--radius-xl);
+    border: 2px solid var(--primary);
+    text-align: center;
+    margin-bottom: var(--space-6);
+}
+
+.verdictTitle {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    margin-bottom: var(--space-2);
+}
+
+.verdictText {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-4);
+    font-size: var(--text-sm);
+}
+
+/* Empty State */
+.notFound {
+    text-align: center;
+    padding: var(--space-10);
+}

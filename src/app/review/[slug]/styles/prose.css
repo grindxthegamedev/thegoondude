@@ -1,0 +1,61 @@
+/**
+ * Review Page - Prose/Content Styles
+ */
+
+.content {
+    margin-bottom: var(--space-6);
+}
+
+.prose {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--text-secondary);
+}
+
+.prose p {
+    margin-bottom: var(--space-4);
+}
+
+.prose h2 {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-3);
+}
+
+.prose h3 {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    margin-top: var(--space-5);
+    margin-bottom: var(--space-2);
+}
+
+.prose strong {
+    color: var(--text-primary);
+}
+
+.prose em {
+    color: var(--accent-alt);
+}
+
+.prose ul,
+.prose ol {
+    margin: var(--space-4) 0;
+    padding-left: var(--space-5);
+}
+
+.prose li {
+    margin-bottom: var(--space-2);
+}
+
+.prose blockquote {
+    border-left: 3px solid var(--primary);
+    padding-left: var(--space-4);
+    margin: var(--space-4) 0;
+    font-style: italic;
+    color: var(--text-muted);
+}
