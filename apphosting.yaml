@@ -4,3 +4,15 @@
 env:
   - variable: NEXT_PUBLIC_FUNCTIONS_URL
     value: https://us-central1-lustlist411.cloudfunctions.net
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyAYNBXw1qKWMhMEJoVMjhHM9s6Rf6ThTpg
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: lustlist411.firebaseapp.com
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: lustlist411
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: lustlist411.firebasestorage.app
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: 686287411688
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:686287411688:web:629e16ff-f6b1-4053-a48a-a0ac23b40a42
