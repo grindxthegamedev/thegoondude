@@ -7,6 +7,7 @@ import puppeteer, { Browser } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import * as logger from 'firebase-functions/logger';
 import { delay, dismissPopups, extractSEO, captureMultipleScreenshots } from './crawlerHelpers';
+import { isAuthEnabled, injectAuthCookies, attemptGoogleAuth } from './crawlerAuth';
 
 export interface SEOData {
     title: string;
@@ -26,6 +27,11 @@ export interface CrawlResult {
     seo: SEOData;
     performance: PerformanceData;
     faviconUrl: string;
+    authenticated?: boolean;
+}
+
+export interface CrawlOptions {
+    useAuth?: boolean;
 }
 
 
@@ -64,23 +70,36 @@ async function launchBrowser(): Promise<Browser> {
 /**
  * Crawl a website with realistic browsing behavior
  */
-export async function crawlSite(url: string): Promise<CrawlResult> {
+export async function crawlSite(url: string, options: CrawlOptions = {}): Promise<CrawlResult> {
     if (!isValidUrl(url)) {
         throw new Error('Invalid URL');
     }
 
-    logger.info('Starting crawl:', url);
+    const { useAuth = false } = options;
+    logger.info('Starting crawl:', url, useAuth ? '(with auth)' : '');
     const startTime = Date.now();
     const browser = await launchBrowser();
+    let authenticated = false;
 
     try {
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(45000);
 
+        // Inject auth cookies if enabled
+        if (useAuth && await isAuthEnabled()) {
+            authenticated = await injectAuthCookies(page);
+            logger.info('Auth injection:', authenticated ? 'success' : 'failed');
+        }
+
         // Navigate to homepage
         logger.info('Navigating to homepage...');
         const response = await page.goto(url, { waitUntil: 'domcontentloaded' });
         await delay(2000);
+
+        // Try Google auth if we see a login gate
+        if (useAuth && !authenticated) {
+            authenticated = await attemptGoogleAuth(page);
+        }
 
         const loadTimeMs = Date.now() - startTime;
         logger.info('Page loaded in', loadTimeMs, 'ms');
@@ -103,6 +122,7 @@ export async function crawlSite(url: string): Promise<CrawlResult> {
             seo,
             performance: { loadTimeMs, pageSize },
             faviconUrl,
+            authenticated,
         };
     } finally {
         await browser.close();

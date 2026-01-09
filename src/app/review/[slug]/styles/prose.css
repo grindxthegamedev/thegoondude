@@ -7,9 +7,12 @@
 }
 
 .prose {
-    font-size: var(--text-base);
-    line-height: var(--leading-relaxed);
+    font-size: var(--text-lg);
+    line-height: 1.8;
     color: var(--text-secondary);
+    max-width: 65ch;
+    /* Optimal reading width */
+    margin: 0 auto;
 }
 
 .prose p {
@@ -34,6 +37,15 @@
     margin-bottom: var(--space-2);
 }
 
+.prose h4 {
+    font-family: var(--font-heading);
+    font-size: var(--text-base);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-2);
+}
+
 .prose strong {
     color: var(--text-primary);
 }
@@ -50,6 +62,8 @@
 
 .prose li {
     margin-bottom: var(--space-2);
+    list-style-type: disc;
+    /* Ensure bullets show */
 }
 
 .prose blockquote {

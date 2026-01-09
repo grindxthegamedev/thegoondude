@@ -46,20 +46,20 @@ export async function dismissPopups(page: Page): Promise<void> {
         // Cookie banners
         '[class*="cookie"] button[class*="accept"]',
         '[class*="cookie"] button[class*="agree"]',
-        '[id*="cookie"] button',
-        '.cookie-banner button',
-        '#cookie-consent button',
+        '[id*="cookie"] button', '.cookie-banner button',
         // Age verification
         '[class*="age"] button[class*="enter"]',
         '[class*="age"] button[class*="yes"]',
-        '.age-gate button',
-        '#age-verify button',
-        // Generic close buttons
+        '.age-gate button', '#age-verify button',
+        // Auth modals (dismiss without logging in)
+        '[class*="auth"] [class*="close"]',
+        '[class*="login"] [class*="close"]',
+        '[class*="signup"] [class*="close"]',
+        // Generic close
         '[class*="modal"] [class*="close"]',
         '[class*="popup"] [class*="close"]',
-        '[class*="overlay"] button[class*="close"]',
-        'button[aria-label="Close"]',
-        '.close-button',
+        'button[aria-label="Close"]', 'button[aria-label*="close"]',
+        '.close-button', '[class*="dismiss"]',
     ];
 
     for (const selector of dismissSelectors) {
@@ -68,11 +68,9 @@ export async function dismissPopups(page: Page): Promise<void> {
             if (element) {
                 await element.click();
                 logger.info('Dismissed popup:', selector);
-                await delay(500);
+                await delay(400);
             }
-        } catch {
-            // Ignore click failures
-        }
+        } catch { /* ignore */ }
     }
 }
 
@@ -142,27 +140,40 @@ async function captureScreenshot(page: Page): Promise<Buffer | null> {
     }
 }
 
-/**
- * Click interactive elements like carousels, galleries
- */
 async function clickInteractiveElements(page: Page): Promise<void> {
-    const interactiveSelectors = [
+    const selectors = [
+        // Filters / Tags / Pills (generalized)
+        '[class*="pill"]:not(.active)', '[class*="tag"]:not(.active)',
+        '[class*="chip"]:not(.active)', '[class*="filter"]:nth-child(2)',
+        // Config / Setup links
+        'a[href*="/config"]', 'a[href*="/setup"]', 'a[href*="/start"]',
+        // Randomizers / Surprise
+        '[class*="random"]', '[class*="surprise"]', '[class*="shuffle"]',
+        // Navigation
         '.carousel-next', '.slick-next', '[class*="next"]',
-        '.gallery-item:nth-child(2)', '.thumbnail:nth-child(2)',
-        '[class*="tab"]:nth-child(2)', '.nav-tab:nth-child(2)',
+        // Content cards
+        '[class*="card"]:nth-child(2)', '[class*="video"]:nth-child(1)',
+        'a[href*="/category/"]', '.thumbnail:nth-child(2)',
+        // Toggles (click to show state change)
+        '[class*="toggle"]:not(.active)', '[class*="switch"]',
     ];
 
-    for (const selector of interactiveSelectors.slice(0, 2)) {
+    logger.info('Exploring interactive elements...');
+    let clicked = 0;
+
+    for (const selector of selectors) {
+        if (clicked >= 3) break; // Limit interactions
         try {
-            const element = await page.$(selector);
-            if (element) {
-                await element.click();
+            const el = await page.$(selector);
+            if (el) {
+                await el.hover();
+                await delay(300);
+                await el.click();
+                logger.info(`Clicked: ${selector}`);
                 await delay(800);
-                break; // Only click one
+                clicked++;
             }
-        } catch {
-            // Ignore
-        }
+        } catch { /* ignore */ }
     }
 }
 
