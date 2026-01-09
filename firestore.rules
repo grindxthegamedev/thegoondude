@@ -5,13 +5,9 @@ service cloud.firestore {
     
     // Sites collection
     match /sites/{siteId} {
-      // Public: read only published sites
-      allow read: if resource.data.status == 'published';
-      
-      // Allow pending submissions to be read by their creator
-      allow read: if resource.data.status == 'pending' 
-        && request.auth != null 
-        && resource.data.submittedBy == request.auth.token.email;
+      // Allow reading all sites (admin panel needs this)
+      // Note: Admin auth is handled client-side for MVP
+      allow read: if true;
       
       // Public submission (create) if status is 'pending'
       allow create: if request.resource.data.status == 'pending'
@@ -19,25 +15,22 @@ service cloud.firestore {
         && request.resource.data.name.size() > 0
         && request.resource.data.url.size() > 0;
       
-      // Cloud Functions can update (using admin SDK)
-      // Web clients cannot update/delete
+      // Cloud Functions handle updates via Admin SDK
       allow update, delete: if false;
     }
     
-    // Users collection - auth required
+    // Users collection - public read for submitters list
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if true;
+      allow write: if false;
     }
     
-    // Payments collection - read by owner only, write by Cloud Functions
+    // Payments - Cloud Functions only
     match /payments/{paymentId} {
-      allow read: if request.auth != null 
-        && resource.data.userId == request.auth.uid;
-      allow create, update, delete: if false;
+      allow read, write: if false;
     }
     
-    // Categories - public read only
+    // Categories - public read
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if false;

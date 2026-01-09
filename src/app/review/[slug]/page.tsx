@@ -11,6 +11,30 @@ interface ReviewPageProps {
     params: Promise<{ slug: string }>;
 }
 
+/**
+ * Clean markdown content from AI response
+ * Handles escaped newlines, JSON artifacts, and code blocks
+ */
+function cleanContent(content: string): string {
+    let cleaned = content;
+
+    // Replace escaped newlines with actual newlines
+    cleaned = cleaned.replace(/\\n/g, '\n');
+
+    // Remove markdown code block wrappers if present
+    cleaned = cleaned.replace(/^```(?:json|markdown)?\n?/i, '');
+    cleaned = cleaned.replace(/\n?```$/i, '');
+
+    // Remove JSON artifacts like "Rating: X.X/10","excerpt":"..." 
+    cleaned = cleaned.replace(/^["'`]*Rating:\s*[\d.]+\/10["'`]*,?\s*/i, '');
+    cleaned = cleaned.replace(/["'`]*,?\s*["'`]?excerpt["'`]?:\s*["'`][^"'`]*["'`],?/gi, '');
+    cleaned = cleaned.replace(/["'`]*,?\s*["'`]?pros["'`]?:\s*\[[^\]]*\],?/gi, '');
+    cleaned = cleaned.replace(/["'`]*,?\s*["'`]?cons["'`]?:\s*\[[^\]]*\],?/gi, '');
+    cleaned = cleaned.replace(/["'`]*,?\s*["'`]?rating["'`]?:\s*[\d.]+\}?["'`]*/gi, '');
+
+    return cleaned.trim();
+}
+
 export default function ReviewPage({ params }: ReviewPageProps) {
     const { slug } = use(params);
     const [site, setSite] = useState<SiteWithReview | null>(null);
@@ -46,6 +70,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
 
     const review = site.review;
     const screenshotUrl = site.crawlData?.screenshotUrl;
+    const cleanedContent = review?.content ? cleanContent(review.content) : null;
 
     return (
         <div className={styles.page}>
@@ -80,8 +105,8 @@ export default function ReviewPage({ params }: ReviewPageProps) {
             {/* Review Content */}
             <section className={styles.content}>
                 <div className={styles.prose}>
-                    {review?.content ? (
-                        <Markdown>{review.content.replace(/\\n/g, '\n')}</Markdown>
+                    {cleanedContent ? (
+                        <Markdown>{cleanedContent}</Markdown>
                     ) : (
                         <>
                             <p>{site.description}</p>
@@ -119,7 +144,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
             <section className={styles.verdict}>
                 <h2 className={styles.verdictTitle}>🔥 The Verdict</h2>
                 <p className={styles.verdictText}>
-                    {review?.content ? 'Check out the full review above!' : 'AI verdict coming soon...'}
+                    {cleanedContent ? 'Check out the full review above!' : 'AI verdict coming soon...'}
                 </p>
                 <Button href={site.url} size="lg">Visit {site.name} →</Button>
             </section>
