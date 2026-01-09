@@ -5,86 +5,13 @@
 
 import { Page } from 'puppeteer-core';
 import * as logger from 'firebase-functions/logger';
-
-import { waitFor, clickAndVerify, clickWithRetry, hasVisibleModal, smartScroll } from './crawlerSmart';
+import { waitFor, clickAndVerify, clickWithRetry, dismissPopups, smartScroll } from './crawlerSmart';
 
 const MAX_SCREENSHOTS = 5;
 
-/**
- * Simple delay helper
- */
+// Helper: wait (replacing old public delay function)
 export function delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Dismiss common popups, overlays, cookie banners
- */
-export async function dismissPopups(page: Page): Promise<void> {
-    const dismissSelectors = [
-        // Cookie banners
-        '[class*="cookie"] button[class*="accept"]',
-        '[class*="cookie"] button[class*="agree"]',
-        '[id*="cookie"] button', '.cookie-banner button',
-        // Age verification
-        '[class*="age"] button[class*="enter"]',
-        '[class*="age"] button[class*="yes"]',
-        '.age-gate button', '#age-verify button',
-        // Auth modals (dismiss without logging in)
-        '[class*="auth"] [class*="close"]',
-        '[class*="login"] [class*="close"]',
-        '[class*="signup"] [class*="close"]',
-        // Generic close
-        '[class*="modal"] [class*="close"]',
-        '[class*="popup"] [class*="close"]',
-        'button[aria-label="Close"]', 'button[aria-label*="close"]',
-        '.close-button', '[class*="dismiss"]',
-        // Specific Pump34-like
-        '[class*="modal-backdrop"]',
-    ];
-
-    // Smart check first
-    if (await hasVisibleModal(page)) {
-        logger.info('Visible modal detected, attempting dismissal...');
-        for (const selector of dismissSelectors) {
-            try {
-                if (await clickAndVerify(page, selector)) {
-                    logger.info('Dismissed popup:', selector);
-                    await delay(400);
-                    if (!await hasVisibleModal(page)) break;
-                }
-            } catch { /* ignore */ }
-        }
-    }
-}
-
-/**
- * Extract SEO data and favicon from page
- */
-export async function extractSEO(page: Page): Promise<{
-    seo: { title: string; description: string; keywords: string[]; h1: string; canonical: string };
-    faviconUrl: string;
-}> {
-    return page.evaluate(() => {
-        const getMeta = (name: string): string => {
-            const el = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
-            return el?.getAttribute('content') || '';
-        };
-
-        const faviconEl = document.querySelector('link[rel="icon"], link[rel="shortcut icon"]') as HTMLLinkElement | null;
-        const favicon = faviconEl?.href || new URL('/favicon.ico', location.origin).href;
-
-        return {
-            seo: {
-                title: document.title || '',
-                description: getMeta('description') || getMeta('og:description'),
-                keywords: (getMeta('keywords') || '').split(',').map(k => k.trim()).filter(Boolean),
-                h1: document.querySelector('h1')?.textContent?.trim() || '',
-                canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
-            },
-            faviconUrl: favicon,
-        };
-    });
 }
 
 /**
@@ -99,7 +26,11 @@ async function captureScreenshot(page: Page): Promise<Buffer | null> {
     }
 }
 
-async function clickInteractiveElements(page: Page): Promise<void> {
+/**
+ * Click interactive elements and take "Journalist" snapshots of changes
+ * Mimics an agent observing the result of an action
+ */
+async function clickInteractiveElements(page: Page, screenshots: Buffer[]): Promise<void> {
     const selectors = [
         // Filters / Tags / Pills (generalized)
         '[class*="pill"]:not(.active)', '[class*="tag"]:not(.active)',
@@ -119,8 +50,8 @@ async function clickInteractiveElements(page: Page): Promise<void> {
     let clicked = 0;
 
     for (const selector of selectors) {
-        if (clicked >= 2) break;
-        // Hover first
+        if (clicked >= 2 || screenshots.length >= MAX_SCREENSHOTS) break;
+
         try {
             const el = await page.$(selector);
             if (el) {
@@ -130,8 +61,15 @@ async function clickInteractiveElements(page: Page): Promise<void> {
 
             // Click with verification
             if (await clickAndVerify(page, selector)) {
-                await delay(800);
+                await delay(800); // Wait for animation
                 clicked++;
+
+                // Journalist Move: Capture the result of the interaction
+                const shot = await captureScreenshot(page);
+                if (shot) {
+                    screenshots.push(shot);
+                    logger.info(`Interaction snapshot captured: ${selector}`);
+                }
             }
         } catch { /* ignore */ }
     }
@@ -148,7 +86,7 @@ async function exploreDeepLinks(page: Page, screenshots: Buffer[]): Promise<void
         anchors
             .map(a => a.href)
             .filter(href => href.includes('/config') || href.includes('/setup') || href.includes('/session'))
-            .slice(0, 2) // Limit to 2 deep explorations
+            .slice(0, 2)
     );
 
     for (const link of deepLinks) {
@@ -156,16 +94,16 @@ async function exploreDeepLinks(page: Page, screenshots: Buffer[]): Promise<void
         try {
             logger.info(`Exploring deep link: ${link}`);
             await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 15000 });
-            await waitFor(page, 'body'); // Ensure render
+            await waitFor(page, 'body');
             await dismissPopups(page);
 
             // Try to find a "Start" or "Enter" button here
             await clickWithRetry(page, 'button[class*="start"], button[class*="enter"]', 1);
 
+            // Snapshot the "Session" or Config result
             const shot = await captureScreenshot(page);
             if (shot) screenshots.push(shot);
 
-            // Go back to continue
             await page.goBack();
             await delay(500);
         } catch (err) {
@@ -194,17 +132,16 @@ export async function captureMultipleScreenshots(page: Page, baseUrl: string): P
         }
     });
 
-    // Ensure at least one shot if scroll didn't trigger any
+    // Ensure at least one shot
     if (screenshots.length === 0) {
         const homeShot = await captureScreenshot(page);
         if (homeShot) screenshots.push(homeShot);
     }
 
-    // 2. Interactive Exploration (Modals, Toggles)
-    await clickInteractiveElements(page);
+    // 2. Interactive Exploration (Modals, Toggles) - Journalist Style
+    await clickInteractiveElements(page, screenshots);
 
     // 3. Deep Navigation (Hub & Spoke)
-    // Find category/nav links to explore lists of content
     const navLinks = await page.$$eval('a[href]', (anchors) =>
         anchors
             .map(a => a.href)
@@ -228,17 +165,14 @@ export async function captureMultipleScreenshots(page: Page, baseUrl: string): P
                 }
             });
 
-            const shot = await captureScreenshot(page);
-            if (shot && screenshots.length < MAX_SCREENSHOTS) screenshots.push(shot);
-
             // From here, try to click a content item (Spoke)
+            await delay(1000);
             await clickWithRetry(page, '[class*="card"] a, [class*="video"] a, .thumbnail', 1);
             await delay(1500);
 
             const itemShot = await captureScreenshot(page);
             if (itemShot && screenshots.length < MAX_SCREENSHOTS) screenshots.push(itemShot);
 
-            // Return to base for next iteration if needed
         } catch (err) {
             logger.warn('Hub traversal failed:', err);
         }

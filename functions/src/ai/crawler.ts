@@ -6,9 +6,9 @@
 import puppeteer, { Browser } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import * as logger from 'firebase-functions/logger';
-import { delay, dismissPopups, extractSEO, captureMultipleScreenshots } from './crawlerHelpers';
+import { delay, captureMultipleScreenshots } from './crawlerHelpers';
 import { isAuthEnabled, injectAuthCookies, attemptGoogleAuth } from './crawlerAuth';
-import { getInteractiveSummary } from './crawlerSmart';
+import { getInteractiveSummary, dismissPopups, extractSEO } from './crawlerSmart';
 
 export interface SEOData {
     title: string;

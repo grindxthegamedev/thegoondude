@@ -191,3 +191,72 @@ export async function smartScroll(page: Page, onSnapshot?: () => Promise<void>):
         logger.warn('Smart scroll failed:', err);
     }
 }
+
+/**
+ * Dismiss common popups, overlays, cookie banners
+ */
+export async function dismissPopups(page: Page): Promise<void> {
+    const dismissSelectors = [
+        // Cookie banners
+        '[class*="cookie"] button[class*="accept"]',
+        '[class*="cookie"] button[class*="agree"]',
+        '[id*="cookie"] button', '.cookie-banner button',
+        // Age verification
+        '[class*="age"] button[class*="enter"]',
+        '[class*="age"] button[class*="yes"]',
+        '.age-gate button', '#age-verify button',
+        // Auth modals (dismiss without logging in)
+        '[class*="auth"] [class*="close"]',
+        '[class*="login"] [class*="close"]',
+        '[class*="signup"] [class*="close"]',
+        // Generic close
+        '[class*="modal"] [class*="close"]',
+        '[class*="popup"] [class*="close"]',
+        'button[aria-label="Close"]', 'button[aria-label*="close"]',
+        '.close-button', '[class*="dismiss"]',
+        // Specific Pump34-like
+        '[class*="modal-backdrop"]',
+    ];
+
+    // Smart check first
+    if (await hasVisibleModal(page)) {
+        logger.info('Visible modal detected, attempting dismissal...');
+        for (const selector of dismissSelectors) {
+            try {
+                if (await clickAndVerify(page, selector)) {
+                    await delay(400);
+                    if (!await hasVisibleModal(page)) break;
+                }
+            } catch { /* ignore */ }
+        }
+    }
+}
+
+/**
+ * Extract SEO data and favicon from page
+ */
+export async function extractSEO(page: Page): Promise<{
+    seo: { title: string; description: string; keywords: string[]; h1: string; canonical: string };
+    faviconUrl: string;
+}> {
+    return page.evaluate(() => {
+        const getMeta = (name: string): string => {
+            const el = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
+            return el?.getAttribute('content') || '';
+        };
+
+        const faviconEl = document.querySelector('link[rel="icon"], link[rel="shortcut icon"]') as HTMLLinkElement | null;
+        const favicon = faviconEl?.href || new URL('/favicon.ico', location.origin).href;
+
+        return {
+            seo: {
+                title: document.title || '',
+                description: getMeta('description') || getMeta('og:description'),
+                keywords: (getMeta('keywords') || '').split(',').map(k => k.trim()).filter(Boolean),
+                h1: document.querySelector('h1')?.textContent?.trim() || '',
+                canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
+            },
+            faviconUrl: favicon,
+        };
+    });
+}
