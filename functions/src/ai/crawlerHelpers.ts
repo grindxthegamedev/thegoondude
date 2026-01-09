@@ -6,36 +6,15 @@
 import { Page } from 'puppeteer-core';
 import * as logger from 'firebase-functions/logger';
 
+import { waitFor, clickAndVerify, clickWithRetry, hasVisibleModal, smartScroll } from './crawlerSmart';
+
 const MAX_SCREENSHOTS = 5;
-const SCREENSHOT_DELAY_MS = 1000;
 
 /**
  * Simple delay helper
  */
 export function delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Smooth scroll down the page to trigger lazy loading
- */
-export async function scrollPage(page: Page): Promise<void> {
-    try {
-        await page.evaluate(async () => {
-            const scrollStep = window.innerHeight / 2;
-            const maxScroll = Math.min(document.body.scrollHeight, window.innerHeight * 3);
-
-            for (let y = 0; y < maxScroll; y += scrollStep) {
-                window.scrollTo({ top: y, behavior: 'smooth' });
-                await new Promise(r => setTimeout(r, 300));
-            }
-            // Scroll back to top for screenshot
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-        await delay(500);
-    } catch (err) {
-        logger.warn('Scroll failed:', err);
-    }
 }
 
 /**
@@ -60,17 +39,22 @@ export async function dismissPopups(page: Page): Promise<void> {
         '[class*="popup"] [class*="close"]',
         'button[aria-label="Close"]', 'button[aria-label*="close"]',
         '.close-button', '[class*="dismiss"]',
+        // Specific Pump34-like
+        '[class*="modal-backdrop"]',
     ];
 
-    for (const selector of dismissSelectors) {
-        try {
-            const element = await page.$(selector);
-            if (element) {
-                await element.click();
-                logger.info('Dismissed popup:', selector);
-                await delay(400);
-            }
-        } catch { /* ignore */ }
+    // Smart check first
+    if (await hasVisibleModal(page)) {
+        logger.info('Visible modal detected, attempting dismissal...');
+        for (const selector of dismissSelectors) {
+            try {
+                if (await clickAndVerify(page, selector)) {
+                    logger.info('Dismissed popup:', selector);
+                    await delay(400);
+                    if (!await hasVisibleModal(page)) break;
+                }
+            } catch { /* ignore */ }
+        }
     }
 }
 
@@ -104,31 +88,6 @@ export async function extractSEO(page: Page): Promise<{
 }
 
 /**
- * Get internal links for navigation, prioritizing unique sections
- */
-async function getInternalLinks(page: Page, baseUrl: string): Promise<string[]> {
-    const baseHost = new URL(baseUrl).host;
-
-    const links = await page.evaluate((host: string) => {
-        const anchors = Array.from(document.querySelectorAll('a[href]'));
-        return anchors
-            .map(a => (a as HTMLAnchorElement).href)
-            .filter(href => {
-                try {
-                    const url = new URL(href);
-                    return url.host === host && !href.includes('#') && !href.includes('login');
-                } catch {
-                    return false;
-                }
-            });
-    }, baseHost);
-
-    // Deduplicate and shuffle for variety
-    const unique = [...new Set(links)];
-    return unique.sort(() => Math.random() - 0.5).slice(0, 10);
-}
-
-/**
  * Capture screenshot with error handling
  */
 async function captureScreenshot(page: Page): Promise<Buffer | null> {
@@ -145,15 +104,13 @@ async function clickInteractiveElements(page: Page): Promise<void> {
         // Filters / Tags / Pills (generalized)
         '[class*="pill"]:not(.active)', '[class*="tag"]:not(.active)',
         '[class*="chip"]:not(.active)', '[class*="filter"]:nth-child(2)',
-        // Config / Setup links
-        'a[href*="/config"]', 'a[href*="/setup"]', 'a[href*="/start"]',
         // Randomizers / Surprise
         '[class*="random"]', '[class*="surprise"]', '[class*="shuffle"]',
         // Navigation
         '.carousel-next', '.slick-next', '[class*="next"]',
         // Content cards
         '[class*="card"]:nth-child(2)', '[class*="video"]:nth-child(1)',
-        'a[href*="/category/"]', '.thumbnail:nth-child(2)',
+        '.thumbnail:nth-child(2)',
         // Toggles (click to show state change)
         '[class*="toggle"]:not(.active)', '[class*="switch"]',
     ];
@@ -162,14 +119,17 @@ async function clickInteractiveElements(page: Page): Promise<void> {
     let clicked = 0;
 
     for (const selector of selectors) {
-        if (clicked >= 3) break; // Limit interactions
+        if (clicked >= 2) break;
+        // Hover first
         try {
             const el = await page.$(selector);
             if (el) {
                 await el.hover();
                 await delay(300);
-                await el.click();
-                logger.info(`Clicked: ${selector}`);
+            }
+
+            // Click with verification
+            if (await clickAndVerify(page, selector)) {
                 await delay(800);
                 clicked++;
             }
@@ -178,49 +138,115 @@ async function clickInteractiveElements(page: Page): Promise<void> {
 }
 
 /**
+ * Explore deep links (multi-step flow) like config pages
+ */
+async function exploreDeepLinks(page: Page, screenshots: Buffer[]): Promise<void> {
+    if (screenshots.length >= MAX_SCREENSHOTS) return;
+
+    // Find interesting deep links (config, setup, start)
+    const deepLinks = await page.$$eval('a[href]', (anchors) =>
+        anchors
+            .map(a => a.href)
+            .filter(href => href.includes('/config') || href.includes('/setup') || href.includes('/session'))
+            .slice(0, 2) // Limit to 2 deep explorations
+    );
+
+    for (const link of deepLinks) {
+        if (screenshots.length >= MAX_SCREENSHOTS) break;
+        try {
+            logger.info(`Exploring deep link: ${link}`);
+            await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 15000 });
+            await waitFor(page, 'body'); // Ensure render
+            await dismissPopups(page);
+
+            // Try to find a "Start" or "Enter" button here
+            await clickWithRetry(page, 'button[class*="start"], button[class*="enter"]', 1);
+
+            const shot = await captureScreenshot(page);
+            if (shot) screenshots.push(shot);
+
+            // Go back to continue
+            await page.goBack();
+            await delay(500);
+        } catch (err) {
+            logger.warn('Deep link exploration failed:', err);
+        }
+    }
+}
+
+/**
  * Capture multiple screenshots with browsing behavior
+ * Implements "Hub and Spoke" traversal: Home -> Category -> List -> Home
  */
 export async function captureMultipleScreenshots(page: Page, baseUrl: string): Promise<Buffer[]> {
     const screenshots: Buffer[] = [];
 
-    // 1. Scroll and capture homepage
-    await scrollPage(page);
-    const homeShot = await captureScreenshot(page);
-    if (homeShot) screenshots.push(homeShot);
+    // 1. Initial State: Scroll and capture intelligently
+    logger.info('Performing smart scroll with snapshots...');
 
-    // 2. Try clicking interactive elements
-    await clickInteractiveElements(page);
-
-    // 3. Scroll down for another view
-    await page.evaluate(() => window.scrollTo({ top: 600, behavior: 'smooth' }));
-    await delay(500);
-    const scrolledShot = await captureScreenshot(page);
-    if (scrolledShot && screenshots.length < MAX_SCREENSHOTS) {
-        screenshots.push(scrolledShot);
-    }
-
-    // 4. Navigate to internal pages
-    const internalLinks = await getInternalLinks(page, baseUrl);
-    logger.info(`Found ${internalLinks.length} internal links`);
-
-    for (const link of internalLinks) {
-        if (screenshots.length >= MAX_SCREENSHOTS) break;
-
-        try {
-            logger.info(`Navigating to: ${link}`);
-            await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 20000 });
-            await delay(SCREENSHOT_DELAY_MS);
-            await dismissPopups(page);
-            await scrollPage(page);
-
+    await smartScroll(page, async () => {
+        if (screenshots.length < MAX_SCREENSHOTS) {
             const shot = await captureScreenshot(page);
             if (shot) {
                 screenshots.push(shot);
-                logger.info(`Screenshot ${screenshots.length}/${MAX_SCREENSHOTS} captured`);
+                logger.info(`Smart snapshot captured (${screenshots.length}/${MAX_SCREENSHOTS})`);
             }
-        } catch (navErr) {
-            logger.warn(`Failed to navigate to ${link}:`, navErr);
         }
+    });
+
+    // Ensure at least one shot if scroll didn't trigger any
+    if (screenshots.length === 0) {
+        const homeShot = await captureScreenshot(page);
+        if (homeShot) screenshots.push(homeShot);
+    }
+
+    // 2. Interactive Exploration (Modals, Toggles)
+    await clickInteractiveElements(page);
+
+    // 3. Deep Navigation (Hub & Spoke)
+    // Find category/nav links to explore lists of content
+    const navLinks = await page.$$eval('a[href]', (anchors) =>
+        anchors
+            .map(a => a.href)
+            .filter(href => !href.includes('#') && (href.includes('/category') || href.includes('/tags') || href.includes('/browse')))
+            .slice(0, 2)
+    );
+
+    for (const link of navLinks) {
+        if (screenshots.length >= MAX_SCREENSHOTS) break;
+        try {
+            logger.info(`Navigating to hub: ${link}`);
+            await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 20000 });
+            await waitFor(page, 'body');
+            await dismissPopups(page);
+
+            // Scroll new page with snapshots
+            await smartScroll(page, async () => {
+                if (screenshots.length < MAX_SCREENSHOTS) {
+                    const shot = await captureScreenshot(page);
+                    if (shot) screenshots.push(shot);
+                }
+            });
+
+            const shot = await captureScreenshot(page);
+            if (shot && screenshots.length < MAX_SCREENSHOTS) screenshots.push(shot);
+
+            // From here, try to click a content item (Spoke)
+            await clickWithRetry(page, '[class*="card"] a, [class*="video"] a, .thumbnail', 1);
+            await delay(1500);
+
+            const itemShot = await captureScreenshot(page);
+            if (itemShot && screenshots.length < MAX_SCREENSHOTS) screenshots.push(itemShot);
+
+            // Return to base for next iteration if needed
+        } catch (err) {
+            logger.warn('Hub traversal failed:', err);
+        }
+    }
+
+    // 4. Explore Deep Links/Config if we still need frames
+    if (screenshots.length < MAX_SCREENSHOTS) {
+        await exploreDeepLinks(page, screenshots);
     }
 
     return screenshots;

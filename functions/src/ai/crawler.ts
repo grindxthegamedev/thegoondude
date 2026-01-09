@@ -8,6 +8,7 @@ import chromium from '@sparticuz/chromium';
 import * as logger from 'firebase-functions/logger';
 import { delay, dismissPopups, extractSEO, captureMultipleScreenshots } from './crawlerHelpers';
 import { isAuthEnabled, injectAuthCookies, attemptGoogleAuth } from './crawlerAuth';
+import { getInteractiveSummary } from './crawlerSmart';
 
 export interface SEOData {
     title: string;
@@ -28,6 +29,7 @@ export interface CrawlResult {
     performance: PerformanceData;
     faviconUrl: string;
     authenticated?: boolean;
+    interactionSummary?: string;
 }
 
 export interface CrawlOptions {
@@ -111,6 +113,10 @@ export async function crawlSite(url: string, options: CrawlOptions = {}): Promis
         // Dismiss popups/overlays
         await dismissPopups(page);
 
+        // Analyze interactive elements
+        const interactionSummary = await getInteractiveSummary(page);
+        logger.info('Interaction potential:', interactionSummary);
+
         // Capture screenshots with browsing behavior
         const screenshots = await captureMultipleScreenshots(page, url);
         logger.info(`Total screenshots captured: ${screenshots.length}`);
@@ -123,6 +129,7 @@ export async function crawlSite(url: string, options: CrawlOptions = {}): Promis
             performance: { loadTimeMs, pageSize },
             faviconUrl,
             authenticated,
+            interactionSummary,
         };
     } finally {
         await browser.close();
