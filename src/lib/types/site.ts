@@ -13,6 +13,7 @@ export interface Site {
     tags: string[];
     rating: number;
     thumbnail?: string;
+    faviconUrl?: string;
     status: 'pending' | 'processing' | 'published' | 'rejected';
     isNew?: boolean;
     isPremium?: boolean;
@@ -24,7 +25,10 @@ export interface Site {
 }
 
 export interface CrawlData {
-    screenshotUrl: string;
+    screenshotUrls: string[];
+    /** @deprecated Use screenshotUrls instead */
+    screenshotUrl?: string;
+    faviconUrl?: string;
     seo: {
         title: string;
         description: string;

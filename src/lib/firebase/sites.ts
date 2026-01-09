@@ -35,10 +35,12 @@ export async function fetchSites(options: FetchSitesOptions = {}): Promise<Site[
         category,
         status = 'published',
         sortBy = 'rating',
-        sortOrder = 'desc',
         limitCount = 20,
         isNew,
     } = options;
+
+    // A-Z sorting should use ascending order by default
+    const sortOrder = options.sortOrder ?? (sortBy === 'name' ? 'asc' : 'desc');
 
     const db = getDb();
     const constraints: QueryConstraint[] = [];

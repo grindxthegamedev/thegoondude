@@ -3,7 +3,7 @@
  * Configuration for Vertex AI Gemini
  */
 
-import { VertexAI, SchemaType } from '@google-cloud/vertexai';
+import { VertexAI, SchemaType, HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
 import * as logger from 'firebase-functions/logger';
 
 // Vertex AI configuration
@@ -16,6 +16,12 @@ const API_ENDPOINT = 'aiplatform.googleapis.com';
 logger.info('Vertex AI Config:', { PROJECT_ID, LOCATION, MODEL, API_ENDPOINT });
 
 let vertexAI: VertexAI | null = null;
+const SAFETY_SETTINGS = [
+    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+];
 
 /**
  * Get Vertex AI client (singleton)
@@ -69,6 +75,7 @@ export function getTextModel() {
     logger.info('Getting text model:', MODEL);
     return getVertexAI().getGenerativeModel({
         model: MODEL,
+        safetySettings: SAFETY_SETTINGS,
         generationConfig: {
             maxOutputTokens: 8192,
             temperature: 0.8,
@@ -86,6 +93,7 @@ export function getAnalysisModel() {
     logger.info('Getting analysis model:', MODEL);
     return getVertexAI().getGenerativeModel({
         model: MODEL,
+        safetySettings: SAFETY_SETTINGS,
         generationConfig: {
             maxOutputTokens: 2048,
             temperature: 0.7,

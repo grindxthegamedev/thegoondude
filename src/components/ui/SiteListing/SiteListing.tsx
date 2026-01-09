@@ -12,6 +12,7 @@ export interface SiteData {
     category: string;
     rating: number;
     thumbnail?: string;
+    faviconUrl?: string;
     isNew?: boolean;
     isPremium?: boolean;
     isFree?: boolean;
@@ -30,6 +31,12 @@ export function SiteListing({ site, rank }: SiteListingProps) {
             {rank !== undefined && (
                 <div className={`${styles.rank} ${isTop3 ? styles.top3 : ""}`}>
                     #{rank}
+                </div>
+            )}
+
+            {site.faviconUrl && (
+                <div className={styles.favicon}>
+                    <img src={site.faviconUrl} alt="" className={styles.faviconImg} />
                 </div>
             )}
 

@@ -37,7 +37,8 @@ export const REVIEW_PROMPT_TEMPLATE = `Review this adult website:
 
 Generate a detailed, engaging review following the structure guidelines.
 Use Markdown formatting in the content field.
-Include a suggested rating from 1-10 at the end.`;
+Include a suggested rating from 1-10 at the end.
+IMPORTANT: The 'content' field must contain ONLY the markdown review text. Do NOT include the JSON structure, keys (like "content": or "Rating":), or opening/closing brackets strings within the content string itself.`;
 
 /**
  * Build review prompt from site data

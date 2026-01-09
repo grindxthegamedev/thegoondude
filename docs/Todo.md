@@ -41,70 +41,71 @@
 - [x] CTA for submissions
 
 ### Directory Pages
-- [/] `/sites` - Main listing page (structure ready)
+- [x] `/sites` - Main listing page with filters
+- [x] Sort options (rating, date, A-Z)
 - [ ] Category filter sidebar
-- [ ] Sort options (rating, date, etc.)
 - [ ] Pagination/infinite scroll
 - [ ] `/sites/[category]` - Category pages
 
 ### Review Pages
-- [ ] `/review/[slug]` - Individual review
-- [ ] Review header (title, rating, meta)
-- [ ] Screenshot gallery
-- [ ] Review content (markdown render)
-- [ ] Pros/Cons section
-- [ ] Verdict box
+- [x] `/review/[slug]` - Individual review
+- [x] Review header (title, rating, meta)
+- [x] Screenshot gallery
+- [x] Review content (markdown render)
+- [x] Pros/Cons section
+- [x] Verdict box
 
 ### Submission Flow
-- [ ] `/submit` - Submission form
-- [ ] URL validation
-- [ ] Category selection
-- [ ] Terms acceptance
-- [ ] Payment placeholder
+- [x] `/submit` - Submission form
+- [x] URL validation
+- [x] Category selection
+- [x] Terms acceptance
+- [ ] Payment integration
 
 ---
 
-## 📋 Phase 3: Backend (Current Focus)
+## 📋 Phase 3: Backend ✅
 
 ### Firebase Setup
-- [/] Create Firebase project structure
-- [ ] Configure Firestore collections
+- [x] Create Firebase project structure
+- [x] Configure Firestore collections
+- [x] Deploy Firestore composite indexes
+- [x] Configure Cloud Functions (AI endpoints)
+- [x] Set up Firebase Storage (screenshots)
 - [ ] Set up Firebase Auth
-- [ ] Configure Cloud Functions
-- [ ] Set up Firebase Storage (screenshots)
 
 ### API Layer
-- [/] Create API hooks structure
-- [ ] `useSites()` - Fetch sites with filters
+- [x] Create API hooks structure
+- [x] `useSites()` - Fetch sites with filters
 - [ ] `useSite(slug)` - Fetch single site
 - [ ] `useCategories()` - Fetch categories
 - [ ] `useSubmission()` - Submit new site
 
 ### Next.js API Routes
-- [ ] `GET /api/sites` - List sites
-- [ ] `GET /api/sites/[slug]` - Get site details
-- [ ] `POST /api/submit` - Site submission
-- [ ] `GET /api/categories` - List categories
+- [x] Firebase submissions API
+- [x] Cloud Functions endpoints
+- [x] App Hosting configured
 
 ---
 
-## 📋 Phase 4: AI Pipeline
+## 📋 Phase 4: AI Pipeline ✅
 
 ### Crawler Agent
-- [ ] Puppeteer in Cloud Functions
-- [ ] Screenshot capture
-- [ ] SEO extraction
-- [ ] Performance metrics
+- [x] Puppeteer in Cloud Functions
+- [x] Screenshot capture
+- [x] SEO extraction
+- [x] Favicon extraction
+- [x] Performance metrics
 
 ### Analysis Agent (Gemini)
-- [ ] Screenshot analysis
-- [ ] Pros/cons generation
-- [ ] Rating calculation
+- [x] Screenshot analysis
+- [x] Pros/cons generation
+- [x] Rating calculation
 
 ### Writer Agent (Gemini)
-- [ ] Review generation prompt
-- [ ] PornDude style
-- [ ] SEO optimization
+- [x] Review generation prompt
+- [x] PornDude style
+- [x] SEO optimization
 
 ---
 
@@ -127,11 +128,13 @@
 
 ---
 
-## 📋 Phase 7: Launch
+## 📋 Phase 7: Launch (Current Focus)
 
 - [ ] Age verification gate
-- [ ] Legal pages (ToS, Privacy)
-- [ ] Firebase hosting
+- [x] Contact page
+- [x] Privacy policy page
+- [x] Terms of Service page
+- [x] Firebase App Hosting
 - [ ] Domain setup
 
 ---

@@ -59,10 +59,9 @@
     color: var(--text-muted);
 }
 
-/* Screenshot */
+/* Screenshot Gallery */
 .screenshotWrap {
     width: 100%;
-    aspect-ratio: 16 / 10;
     background: var(--bg-surface);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
@@ -70,10 +69,37 @@
     margin-bottom: var(--space-6);
 }
 
+.gallery {
+    display: flex;
+    gap: var(--space-3);
+    overflow-x: auto;
+    padding: var(--space-3);
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.gallery::-webkit-scrollbar {
+    height: 8px;
+}
+
+.gallery::-webkit-scrollbar-track {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-full);
+}
+
+.gallery::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: var(--radius-full);
+}
+
 .screenshot {
+    flex-shrink: 0;
     width: 100%;
-    height: 100%;
+    max-width: 600px;
+    aspect-ratio: 16 / 10;
     object-fit: cover;
+    border-radius: var(--radius-md);
+    scroll-snap-align: start;
     transition: transform var(--transition-slow);
 }
 

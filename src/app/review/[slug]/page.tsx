@@ -69,7 +69,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     }
 
     const review = site.review;
-    const screenshotUrl = site.crawlData?.screenshotUrl;
+    // Support both new screenshotUrls array and legacy screenshotUrl
+    const screenshotUrls = site.crawlData?.screenshotUrls ||
+        (site.crawlData?.screenshotUrl ? [site.crawlData.screenshotUrl] : []);
     const cleanedContent = review?.content ? cleanContent(review.content) : null;
 
     return (
@@ -90,14 +92,23 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 </div>
             </header>
 
-            {/* Screenshot */}
+            {/* Screenshot Gallery */}
             <div className={styles.screenshotWrap}>
-                {screenshotUrl ? (
-                    <img src={screenshotUrl} alt={`${site.name} screenshot`} className={styles.screenshot} />
+                {screenshotUrls.length > 0 ? (
+                    <div className={styles.gallery}>
+                        {screenshotUrls.map((url, i) => (
+                            <img
+                                key={i}
+                                src={url}
+                                alt={`${site.name} screenshot ${i + 1}`}
+                                className={styles.screenshot}
+                            />
+                        ))}
+                    </div>
                 ) : (
                     <div className={styles.screenshotPlaceholder}>
                         <span>📸</span>
-                        <p>Screenshot not available</p>
+                        <p>Screenshots not available</p>
                     </div>
                 )}
             </div>
