@@ -26,6 +26,8 @@ export default function AdminPage() {
         const valid = await verifyAdminPassword(password);
         if (valid) {
             setAdminAuthenticated(true);
+            // Store password for Cloud Function calls
+            sessionStorage.setItem('admin_password', password);
             setAuthenticated(true);
         } else {
             setError('Invalid password');
@@ -34,6 +36,7 @@ export default function AdminPage() {
 
     const handleLogout = () => {
         setAdminAuthenticated(false);
+        sessionStorage.removeItem('admin_password');
         setAuthenticated(false);
     };
 

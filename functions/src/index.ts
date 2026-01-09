@@ -9,6 +9,7 @@ import * as logger from 'firebase-functions/logger';
 // Import endpoints
 export { createPayment, ipnWebhook } from './payments';
 export { generateSiteReview, processFullReview } from './ai/endpoints';
+export { adminDeleteSite, adminUpdateSite } from './admin';
 
 // Set global options for cost control
 setGlobalOptions({ maxInstances: 10 });
