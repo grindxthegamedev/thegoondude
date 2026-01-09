@@ -260,3 +260,45 @@ export async function extractSEO(page: Page): Promise<{
         };
     });
 }
+
+/**
+ * Identify primary "Action" buttons (Start, Enter, Watch)
+ */
+export async function findActionButtons(page: Page): Promise<ElementHandle[]> {
+    return page.evaluateHandle(() => {
+        const keywords = ['start', 'enter', 'watch', 'join', 'play', 'live', 'session', 'interact'];
+        const buttons = Array.from(document.querySelectorAll('button, a[class*="btn"], a[class*="button"]'));
+
+        return buttons.filter(el => {
+            const text = el.textContent?.toLowerCase().trim() || '';
+            const rect = el.getBoundingClientRect();
+            // Heuristic: visible, clickable size, contains action keyword
+            return rect.width > 20 && rect.height > 20 &&
+                window.getComputedStyle(el).display !== 'none' &&
+                keywords.some(k => text.includes(k));
+        });
+    }).then((handle: any) => {
+        const properties = handle.getProperties();
+        const result: ElementHandle[] = [];
+        for (const prop of properties.values()) {
+            const element = prop.asElement();
+            if (element) result.push(element);
+        }
+        return result;
+    });
+}
+
+/**
+ * Heuristic to detect if we are on a "Content" page (Player, Active Session)
+ */
+export async function isContentPage(page: Page): Promise<boolean> {
+    return page.evaluate(() => {
+        // Look for typical content indicators
+        const hasVideo = !!document.querySelector('video');
+        const hasCanvas = !!document.querySelector('canvas'); // Games/Interactive
+        const hasChat = !!document.querySelector('[class*="chat"]');
+        const hasPlayer = !!document.querySelector('[class*="player"]');
+
+        return hasVideo || (hasCanvas && window.innerWidth > 800) || (hasChat && hasPlayer);
+    });
+}

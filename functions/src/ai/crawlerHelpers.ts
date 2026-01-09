@@ -5,7 +5,7 @@
 
 import { Page } from 'puppeteer-core';
 import * as logger from 'firebase-functions/logger';
-import { waitFor, clickAndVerify, clickWithRetry, dismissPopups, smartScroll } from './crawlerSmart';
+import { waitFor, clickAndVerify, clickWithRetry, dismissPopups, smartScroll, findActionButtons, isContentPage } from './crawlerSmart';
 
 const MAX_SCREENSHOTS = 5;
 
@@ -76,16 +76,41 @@ async function clickInteractiveElements(page: Page, screenshots: Buffer[]): Prom
 }
 
 /**
- * Explore deep links (multi-step flow) like config pages
+ * actively hunts for "Start", "Enter", "Watch" actions
  */
-async function exploreDeepLinks(page: Page, screenshots: Buffer[]): Promise<void> {
+async function exploreContentFlow(page: Page, screenshots: Buffer[]): Promise<void> {
     if (screenshots.length >= MAX_SCREENSHOTS) return;
 
-    // Find interesting deep links (config, setup, start)
+    logger.info('Hunting for Deep Content / Action Buttons...');
+
+    // 1. Look for big primary action buttons
+    const actionButtons = await findActionButtons(page);
+
+    if (actionButtons.length > 0) {
+        logger.info(`Found ${actionButtons.length} potential action buttons. Clicking primary...`);
+        try {
+            // Click the first/most prominent one
+            await clickAndVerify(page, actionButtons[0]);
+            await waitFor(page, 'body');
+            await dismissPopups(page);
+
+            // Check if we reached a content page
+            if (await isContentPage(page)) {
+                logger.info('Reached verified Content Page! Taking priority snapshot.');
+                const shot = await captureScreenshot(page);
+                if (shot) screenshots.push(shot);
+                return; // Mission accomplished
+            }
+        } catch (err) {
+            logger.warn('Action button click failed:', err);
+        }
+    }
+
+    // 2. If no actions, fallback to Deep Links (Config/Setup)
     const deepLinks = await page.$$eval('a[href]', (anchors) =>
         anchors
             .map(a => a.href)
-            .filter(href => href.includes('/config') || href.includes('/setup') || href.includes('/session'))
+            .filter(href => href.includes('/config') || href.includes('/setup') || href.includes('/session') || href.includes('/join'))
             .slice(0, 2)
     );
 
@@ -97,10 +122,12 @@ async function exploreDeepLinks(page: Page, screenshots: Buffer[]): Promise<void
             await waitFor(page, 'body');
             await dismissPopups(page);
 
-            // Try to find a "Start" or "Enter" button here
-            await clickWithRetry(page, 'button[class*="start"], button[class*="enter"]', 1);
+            // Try to find a "Start" or "Enter" button here (Config page flow)
+            await clickWithRetry(page, 'button[class*="start"], button[class*="enter"], button[class*="go"]', 1);
 
-            // Snapshot the "Session" or Config result
+            // Wait for potential player load
+            await new Promise(r => setTimeout(r, 2000));
+
             const shot = await captureScreenshot(page);
             if (shot) screenshots.push(shot);
 
@@ -178,9 +205,9 @@ export async function captureMultipleScreenshots(page: Page, baseUrl: string): P
         }
     }
 
-    // 4. Explore Deep Links/Config if we still need frames
+    // 4. Explore Deep Content (Priority Hunt)
     if (screenshots.length < MAX_SCREENSHOTS) {
-        await exploreDeepLinks(page, screenshots);
+        await exploreContentFlow(page, screenshots);
     }
 
     return screenshots;
