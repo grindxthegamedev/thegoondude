@@ -32,6 +32,13 @@ function cleanContent(content: string): string {
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?cons["'`]?:\s*\[[^\]]*\],?/gi, '');
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?rating["'`]?:\s*[\d.]+\}?["'`]*/gi, '');
 
+    // CRITICAL: Ensure markdown headers are on their own line
+    // This handles cases where ## is inline with previous text
+    cleaned = cleaned.replace(/([^\n])(\s*)(#{1,6}\s+)/g, '$1\n\n$3');
+
+    // Clean up excessive line breaks (more than 3 in a row)
+    cleaned = cleaned.replace(/\n{4,}/g, '\n\n\n');
+
     return cleaned.trim();
 }
 

@@ -90,12 +90,16 @@
 
 ## 📋 Phase 4: AI Pipeline ✅
 
-### Crawler Agent
+### Crawler Agent (Manus-Style Architecture)
 - [x] Puppeteer in Cloud Functions
 - [x] Screenshot capture
 - [x] SEO extraction
 - [x] Favicon extraction
 - [x] Performance metrics
+- [x] **Intelligent Age Gate Bypass** (Text-based clicking)
+- [x] **Observe → Decide → Act Loop** (Manus-style)
+- [x] **Modular Architecture** (crawlerDOM, crawlerDecide, crawlerAct, crawler)
+- [x] **Semantic Page Understanding** (No more CSS selector guessing)
 
 ### Analysis Agent (Gemini)
 - [x] Screenshot analysis

@@ -84,3 +84,35 @@ export async function submitSite(data: SubmissionData): Promise<SubmissionResult
         return { success: false, error: 'Failed to submit site. Please try again.' };
     }
 }
+
+/**
+ * Check if a site has a valid backlink to TheGoonDude
+ * Calls the checkBacklink Cloud Function
+ */
+export interface BacklinkCheckResult {
+    eligible: boolean;
+    backlinkFound: boolean;
+    backlinkUrl?: string;
+    message: string;
+    retryAfter?: number;
+}
+
+export async function checkBacklinkEligibility(url: string): Promise<BacklinkCheckResult> {
+    try {
+        const { getFunctions, httpsCallable } = await import('firebase/functions');
+        const { app } = await import('./config');
+
+        const functions = getFunctions(app);
+        const checkBacklink = httpsCallable<{ url: string }, BacklinkCheckResult>(functions, 'checkBacklink');
+
+        const result = await checkBacklink({ url });
+        return result.data;
+    } catch (error) {
+        console.error('Backlink check error:', error);
+        return {
+            eligible: false,
+            backlinkFound: false,
+            message: 'Failed to check backlink. Please try again.'
+        };
+    }
+}

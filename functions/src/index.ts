@@ -10,6 +10,7 @@ import * as logger from 'firebase-functions/logger';
 export { createPayment, ipnWebhook } from './payments';
 export { generateSiteReview, processFullReview } from './ai/endpoints';
 export { adminDeleteSite, adminUpdateSite } from './admin';
+export { checkBacklink } from './backlink/checkBacklink';
 
 // Set global options for cost control
 setGlobalOptions({ maxInstances: 10 });
