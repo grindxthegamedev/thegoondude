@@ -13,7 +13,7 @@ interface ReviewPageProps {
 
 /**
  * Clean markdown content from AI response
- * Handles escaped newlines, JSON artifacts, and code blocks
+ * Handles escaped newlines, JSON artifacts, and ensures proper formatting
  */
 function cleanContent(content: string): string {
     let cleaned = content;
@@ -25,18 +25,23 @@ function cleanContent(content: string): string {
     cleaned = cleaned.replace(/^```(?:json|markdown)?\n?/i, '');
     cleaned = cleaned.replace(/\n?```$/i, '');
 
-    // Remove JSON artifacts like "Rating: X.X/10","excerpt":"..." 
+    // Remove JSON artifacts
     cleaned = cleaned.replace(/^["'`]*Rating:\s*[\d.]+\/10["'`]*,?\s*/i, '');
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?excerpt["'`]?:\s*["'`][^"'`]*["'`],?/gi, '');
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?pros["'`]?:\s*\[[^\]]*\],?/gi, '');
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?cons["'`]?:\s*\[[^\]]*\],?/gi, '');
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?rating["'`]?:\s*[\d.]+\}?["'`]*/gi, '');
 
-    // CRITICAL: Ensure markdown headers are on their own line
-    // This handles cases where ## is inline with previous text
+    // Ensure headers are on their own line
     cleaned = cleaned.replace(/([^\n])(\s*)(#{1,6}\s+)/g, '$1\n\n$3');
 
-    // Clean up excessive line breaks (more than 3 in a row)
+    // Ensure numbered lists have line breaks
+    cleaned = cleaned.replace(/([.!?])\s*(\d+\.\s+)/g, '$1\n\n$2');
+
+    // Add paragraph breaks between long sentences (periods followed by capital letters)
+    cleaned = cleaned.replace(/([.!?])\s+([A-Z][a-z])/g, '$1\n\n$2');
+
+    // Clean up excessive line breaks
     cleaned = cleaned.replace(/\n{4,}/g, '\n\n\n');
 
     return cleaned.trim();

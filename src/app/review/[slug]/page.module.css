@@ -129,13 +129,15 @@
 }
 
 .prose {
-    font-size: var(--text-lg);
-    line-height: 1.8;
+    font-size: var(--text-base);
+    line-height: 1.75;
     color: var(--text-secondary);
+    max-width: 65ch;
+    margin: 0 auto;
 }
 
 .prose p {
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-5);
 }
 
 .prose h2 {
@@ -143,8 +145,16 @@
     font-size: var(--text-xl);
     font-weight: var(--font-bold);
     color: var(--text-primary);
-    margin-top: var(--space-6);
-    margin-bottom: var(--space-3);
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+}
+
+.prose h2:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
 }
 
 .prose h3 {
@@ -152,12 +162,13 @@
     font-size: var(--text-lg);
     font-weight: var(--font-semibold);
     color: var(--text-primary);
-    margin-top: var(--space-5);
-    margin-bottom: var(--space-2);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-3);
 }
 
 .prose strong {
     color: var(--text-primary);
+    font-weight: var(--font-semibold);
 }
 
 .prose em {
@@ -167,17 +178,21 @@
 .prose ul,
 .prose ol {
     margin: var(--space-4) 0;
-    padding-left: var(--space-5);
+    padding-left: var(--space-6);
 }
 
 .prose li {
     margin-bottom: var(--space-2);
 }
 
+.prose li::marker {
+    color: var(--primary);
+}
+
 .prose blockquote {
     border-left: 3px solid var(--primary);
     padding-left: var(--space-4);
-    margin: var(--space-4) 0;
+    margin: var(--space-5) 0;
     font-style: italic;
     color: var(--text-muted);
 }
