@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { AgeGate } from "@/components/ui";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#0D0D0D" />
       </head>
       <body>
+        <AgeGate />
         <Header />
         <main>{children}</main>
         <Footer />
@@ -35,3 +37,4 @@ export default function RootLayout({
     </html>
   );
 }
+

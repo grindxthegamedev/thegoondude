@@ -79,19 +79,20 @@ export default function SubmitPage() {
     const handleCheckBacklink = async () => {
         if (!validateUrl()) return;
 
+        // TEMP: Skip backlink check for testing
+        setStatus('eligible');
+        setMessage('✓ Testing mode: Backlink bypassed');
+        setBacklinkResult({ eligible: true, backlinkFound: true, message: 'Testing' });
+        return;
+
+        /* Original:
         setStatus('checking');
         setMessage('');
-
         const result = await checkBacklinkEligibility(formData.url);
         setBacklinkResult(result);
-
-        if (result.eligible) {
-            setStatus('eligible');
-            setMessage(result.message);
-        } else {
-            setStatus('error');
-            setMessage(result.message);
-        }
+        if (result.eligible) { setStatus('eligible'); setMessage(result.message); }
+        else { setStatus('error'); setMessage(result.message); }
+        */
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

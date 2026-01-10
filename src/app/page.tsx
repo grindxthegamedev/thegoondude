@@ -88,7 +88,7 @@ export default function Home() {
           <p className={styles.submitDesc}>
             Submit your site for review and get featured in our directory.
           </p>
-          <div className={styles.submitPrice}>$20 one-time fee</div>
+          <div className={styles.submitPrice}>🔗 Free with backlink</div>
           <br />
           <Button href="/submit" size="lg">
             Submit Your Site →
