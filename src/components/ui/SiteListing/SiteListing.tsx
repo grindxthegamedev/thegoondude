@@ -16,6 +16,10 @@ export interface SiteData {
     isNew?: boolean;
     isPremium?: boolean;
     isFree?: boolean;
+    crawlData?: {
+        screenshotUrls?: string[];
+        faviconUrl?: string;
+    };
 }
 
 interface SiteListingProps {
@@ -26,6 +30,10 @@ interface SiteListingProps {
 export function SiteListing({ site, rank }: SiteListingProps) {
     const isTop3 = rank !== undefined && rank <= 3;
 
+    // Extract thumbnail and favicon from crawlData if not at top level
+    const thumbnail = site.thumbnail || site.crawlData?.screenshotUrls?.[0];
+    const faviconUrl = site.faviconUrl || site.crawlData?.faviconUrl;
+
     return (
         <article className={styles.listing}>
             {rank !== undefined && (
@@ -34,16 +42,16 @@ export function SiteListing({ site, rank }: SiteListingProps) {
                 </div>
             )}
 
-            {site.faviconUrl && (
+            {faviconUrl && (
                 <div className={styles.favicon}>
-                    <img src={site.faviconUrl} alt="" className={styles.faviconImg} />
+                    <img src={faviconUrl} alt="" className={styles.faviconImg} />
                 </div>
             )}
 
             <div className={styles.thumb}>
-                {site.thumbnail ? (
+                {thumbnail ? (
                     <img
-                        src={site.thumbnail}
+                        src={thumbnail}
                         alt={site.name}
                         className={styles.thumbImg}
                     />

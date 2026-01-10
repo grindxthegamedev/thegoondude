@@ -1,8 +1,5 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from "next/link";
+import { SearchBar } from "@/components/ui";
 import styles from "./Header.module.css";
 
 const navLinks = [
@@ -13,16 +10,6 @@ const navLinks = [
 ];
 
 export function Header() {
-    const [query, setQuery] = useState('');
-    const router = useRouter();
-
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (query.trim()) {
-            router.push(`/sites?q=${encodeURIComponent(query.trim())}`);
-        }
-    };
-
     return (
         <header className={styles.header}>
             <div className={styles.headerInner}>
@@ -31,16 +18,7 @@ export function Header() {
                     <span className={styles.logoText}>TheGoonDude</span>
                 </Link>
 
-                <form onSubmit={handleSearch} className={styles.searchForm}>
-                    <input
-                        type="search"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search sites..."
-                        className={styles.searchInput}
-                    />
-                    <button type="submit" className={styles.searchBtn}>🔍</button>
-                </form>
+                <SearchBar />
 
                 <nav className={styles.nav}>
                     {navLinks.map((link) => (
@@ -62,4 +40,3 @@ export function Header() {
         </header>
     );
 }
-

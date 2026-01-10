@@ -112,3 +112,33 @@ export async function fetchNewSites(count: number = 10): Promise<Site[]> {
 export async function fetchSitesByCategory(category: string, count: number = 20): Promise<Site[]> {
     return fetchSites({ category, limitCount: count });
 }
+
+/**
+ * Search sites by name (client-side filter for now)
+ * Note: Firestore doesn't support full-text search, so we fetch and filter
+ */
+export async function searchSites(searchQuery: string, count: number = 10): Promise<Site[]> {
+    const db = getDb();
+    const q = query(
+        collection(db, COLLECTION),
+        where('status', '==', 'published'),
+        orderBy('rating', 'desc'),
+        limit(50) // Fetch more to filter
+    );
+
+    const snapshot = await getDocs(q);
+    const sites = snapshot.docs.map((docSnapshot) => ({
+        id: docSnapshot.id,
+        ...docSnapshot.data(),
+    })) as Site[];
+
+    // Client-side filter by name or category
+    const lower = searchQuery.toLowerCase();
+    return sites
+        .filter(s =>
+            s.name.toLowerCase().includes(lower) ||
+            s.category.toLowerCase().includes(lower) ||
+            s.description?.toLowerCase().includes(lower)
+        )
+        .slice(0, count);
+}
