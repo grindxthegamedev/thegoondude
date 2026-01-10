@@ -26,12 +26,13 @@ const db = admin.firestore();
  */
 /**
  * Helper to clean AI-generated content
+ * Ensures proper markdown formatting with headers on their own lines
  */
 function cleanReviewContent(content: string): string {
     if (!content) return '';
     let cleaned = content;
 
-    // Replace escaped newlines
+    // Replace escaped newlines with actual newlines
     cleaned = cleaned.replace(/\\n/g, '\n');
 
     // Remove markdown code blocks
@@ -44,6 +45,15 @@ function cleanReviewContent(content: string): string {
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?pros["'`]?:\s*\[[^\]]*\],?/gi, '');
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?cons["'`]?:\s*\[[^\]]*\],?/gi, '');
     cleaned = cleaned.replace(/["'`]*,?\s*["'`]?title["'`]?:\s*["'`][^"'`]*["'`],?/gi, '');
+
+    // CRITICAL: Ensure headers are on their own lines with blank lines before
+    cleaned = cleaned.replace(/([^\n])\s*(#{1,6}\s+)/g, '$1\n\n$2');
+
+    // Ensure blank line after header before content
+    cleaned = cleaned.replace(/(#{1,6}\s+[^\n]+)\n([^\n#])/g, '$1\n\n$2');
+
+    // Clean up excessive line breaks (more than 3 in a row)
+    cleaned = cleaned.replace(/\n{4,}/g, '\n\n\n');
 
     return cleaned.trim();
 }

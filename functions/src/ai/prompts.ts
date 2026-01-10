@@ -23,6 +23,13 @@ Structure your review as:
 6. **User Experience** - Navigation, design, mobile experience
 7. **Verdict** - Final recommendation and rating justification
 
+CRITICAL FORMATTING RULES:
+- Every markdown header (## or ###) MUST be on its own line
+- Include a BLANK LINE before every header
+- Include a BLANK LINE after every header before the content
+- Include a BLANK LINE between paragraphs
+- Example: "...end of paragraph.\\n\\n## Next Section\\n\\nStart of next paragraph..."
+
 Always maintain a sex-positive, non-judgmental tone. Never shame users or content creators.
 Use Markdown formatting: ## for headers, **bold**, *italic*, - for lists.`;
 
