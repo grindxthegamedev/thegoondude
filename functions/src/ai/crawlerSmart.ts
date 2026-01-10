@@ -193,15 +193,41 @@ export async function smartScroll(page: Page, onSnapshot?: () => Promise<void>):
 }
 
 /**
- * Dismiss common popups, overlays, cookie banners
+ * Intelligently dismiss age gates, cookie banners, and popups
+ * Uses text-based matching for resilience across different sites
  */
 export async function dismissPopups(page: Page): Promise<void> {
+    logger.info('Checking for blocking popups...');
+
+    // 1. TEXT-BASED AGE GATE PATTERNS (Priority - These block everything)
+    const ageGateTextPatterns = [
+        'I am 18 or older',
+        'I am over 18',
+        'I\'m over 18',
+        'Enter',
+        'I agree',
+        'Yes, I am 18',
+        'Continue to site',
+        'Accept & Enter',
+        'Enter Site',
+    ];
+
+    for (const text of ageGateTextPatterns) {
+        if (await clickByText(page, text)) {
+            logger.info(`Dismissed age gate via text: "${text}"`);
+            await delay(1500);
+            break; // Successfully passed the gate
+        }
+    }
+
+    // 2. CSS-BASED SELECTORS (Fallback for cookie/misc popups)
     const dismissSelectors = [
         // Cookie banners
         '[class*="cookie"] button[class*="accept"]',
         '[class*="cookie"] button[class*="agree"]',
         '[id*="cookie"] button', '.cookie-banner button',
-        // Age verification
+        'button[class*="consent"]', '[class*="gdpr"] button',
+        // Age verification (CSS fallback)
         '[class*="age"] button[class*="enter"]',
         '[class*="age"] button[class*="yes"]',
         '.age-gate button', '#age-verify button',
@@ -214,13 +240,11 @@ export async function dismissPopups(page: Page): Promise<void> {
         '[class*="popup"] [class*="close"]',
         'button[aria-label="Close"]', 'button[aria-label*="close"]',
         '.close-button', '[class*="dismiss"]',
-        // Specific Pump34-like
-        '[class*="modal-backdrop"]',
     ];
 
-    // Smart check first
+    // Only proceed if there's still a visible modal
     if (await hasVisibleModal(page)) {
-        logger.info('Visible modal detected, attempting dismissal...');
+        logger.info('Modal still visible, trying CSS selectors...');
         for (const selector of dismissSelectors) {
             try {
                 if (await clickAndVerify(page, selector)) {

@@ -1,14 +1,15 @@
 /**
- * Crawler Agent
- * Uses Puppeteer to capture multiple screenshots with realistic browsing
+ * Crawler Agent - The Orchestrator
+ * Implements Manus-style Observe → Decide → Act loop
  */
 
 import puppeteer, { Browser } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import * as logger from 'firebase-functions/logger';
-import { delay, captureMultipleScreenshots } from './crawlerHelpers';
-import { isAuthEnabled, injectAuthCookies, attemptGoogleAuth } from './crawlerAuth';
-import { getInteractiveSummary, dismissPopups, extractSEO } from './crawlerSmart';
+
+import { getPageState } from './crawlerDOM';
+import { detectBlocker, findBestAction, isContentPage } from './crawlerDecide';
+import { delay, dismissBlocker, smartScroll, captureScreenshot, extractSEO, navigate, clickByText } from './crawlerAct';
 
 export interface SEOData {
     title: string;
@@ -28,19 +29,11 @@ export interface CrawlResult {
     seo: SEOData;
     performance: PerformanceData;
     faviconUrl: string;
-    authenticated?: boolean;
-    interactionSummary?: string;
 }
 
-export interface CrawlOptions {
-    useAuth?: boolean;
-}
+const MAX_SCREENSHOTS = 5;
 
-
-
-/**
- * Validate URL is safe to crawl
- */
+/** Validate URL is safe to crawl */
 function isValidUrl(url: string): boolean {
     try {
         const parsed = new URL(url);
@@ -50,9 +43,7 @@ function isValidUrl(url: string): boolean {
     }
 }
 
-/**
- * Launch browser with optimized settings
- */
+/** Launch browser with optimized settings */
 async function launchBrowser(): Promise<Browser> {
     return puppeteer.launch({
         args: [
@@ -70,72 +61,97 @@ async function launchBrowser(): Promise<Browser> {
 }
 
 /**
- * Crawl a website with realistic browsing behavior
+ * Main crawl function with Observe → Decide → Act loop
  */
-export async function crawlSite(url: string, options: CrawlOptions = {}): Promise<CrawlResult> {
-    if (!isValidUrl(url)) {
-        throw new Error('Invalid URL');
-    }
+export async function crawlSite(url: string): Promise<CrawlResult> {
+    if (!isValidUrl(url)) throw new Error('Invalid URL');
 
-    const { useAuth = false } = options;
-    logger.info('Starting crawl:', url, useAuth ? '(with auth)' : '');
+    logger.info('Starting intelligent crawl:', url);
     const startTime = Date.now();
     const browser = await launchBrowser();
-    let authenticated = false;
+    const screenshots: Buffer[] = [];
 
     try {
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(45000);
 
-        // Inject auth cookies if enabled
-        if (useAuth && await isAuthEnabled()) {
-            authenticated = await injectAuthCookies(page);
-            logger.info('Auth injection:', authenticated ? 'success' : 'failed');
-        }
-
         // Navigate to homepage
-        logger.info('Navigating to homepage...');
-        const response = await page.goto(url, { waitUntil: 'domcontentloaded' });
-        await delay(2000);
+        await navigate(page, url);
 
-        // Try Google auth if we see a login gate
-        if (useAuth && !authenticated) {
-            authenticated = await attemptGoogleAuth(page);
+        // PHASE 1: Handle Blockers (Age gates, Cookies, etc.)
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        while (attempts < maxAttempts) {
+            const pageState = await getPageState(page);
+            const blocker = detectBlocker(pageState);
+
+            if (!blocker) {
+                logger.info('No blockers detected, proceeding...');
+                break;
+            }
+
+            logger.info(`Blocker detected: ${blocker.type}`);
+            const dismissed = await dismissBlocker(page, blocker);
+
+            if (!dismissed) {
+                logger.warn('Could not dismiss blocker, trying fallback...');
+                // Fallback: try clicking any "Enter" or "Accept" button
+                await clickByText(page, 'Enter') || await clickByText(page, 'Accept');
+            }
+
+            await delay(1500);
+            attempts++;
         }
 
-        const loadTimeMs = Date.now() - startTime;
-        logger.info('Page loaded in', loadTimeMs, 'ms');
+        // PHASE 2: Capture Homepage
+        const homeShot = await captureScreenshot(page);
+        if (homeShot) screenshots.push(homeShot);
+        logger.info('Homepage captured');
 
-        // Extract SEO and favicon
+        // PHASE 3: Find and capture Content
+        const pageState = await getPageState(page);
+        const action = findBestAction(pageState);
+
+        if (action) {
+            logger.info(`Best action found: ${action.targetText} (${action.reason})`);
+
+            if (await clickByText(page, action.targetText)) {
+                await delay(2000);
+
+                // Check if we reached content
+                const newState = await getPageState(page);
+                if (isContentPage(newState)) {
+                    logger.info('Content page reached!');
+                    const contentShot = await captureScreenshot(page);
+                    if (contentShot) screenshots.push(contentShot);
+                }
+            }
+        }
+
+        // PHASE 4: Scroll and capture more
+        await smartScroll(page, async () => {
+            if (screenshots.length < MAX_SCREENSHOTS) {
+                const shot = await captureScreenshot(page);
+                if (shot) screenshots.push(shot);
+            }
+        });
+
+        // Extract SEO and performance data
         const { seo, faviconUrl } = await extractSEO(page);
-        logger.info('SEO extracted:', seo.title);
+        const loadTimeMs = Date.now() - startTime;
 
-        // Dismiss popups/overlays
-        await dismissPopups(page);
-
-        // Analyze interactive elements
-        const interactionSummary = await getInteractiveSummary(page);
-        logger.info('Interaction potential:', interactionSummary);
-
-        // Capture screenshots with browsing behavior
-        const screenshots = await captureMultipleScreenshots(page, url);
-        logger.info(`Total screenshots captured: ${screenshots.length}`);
-
-        const pageSize = parseInt(response?.headers()['content-length'] || '0', 10);
+        logger.info(`Crawl complete: ${screenshots.length} screenshots`);
 
         return {
             screenshots,
             seo,
-            performance: { loadTimeMs, pageSize },
-            faviconUrl,
-            authenticated,
-            interactionSummary,
+            performance: { loadTimeMs, pageSize: 0 },
+            faviconUrl
         };
     } finally {
         await browser.close();
-        logger.info('Browser closed');
     }
 }
 
-// Re-export for backward compatibility
 export { launchBrowser };
