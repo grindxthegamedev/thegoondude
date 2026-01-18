@@ -117,7 +117,7 @@ export default function AdminSitesPage() {
                                 <tr key={site.id}>
                                     <td><a href={site.url} target="_blank" rel="noopener" style={{ color: 'var(--primary)' }}>{site.name}</a></td>
                                     <td>{getStatusBadge(site.status)}</td>
-                                    <td>{site.rating.toFixed(1)}</td>
+                                    <td>{(site.rating ?? 0).toFixed(1)}</td>
                                     <td>{formatDate(site.submittedAt)}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>

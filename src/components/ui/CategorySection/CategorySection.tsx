@@ -50,7 +50,7 @@ export function CategorySection({ category, sites, loading }: CategorySectionPro
                                 </div>
                                 <div className={styles.cardContent}>
                                     <span className={styles.siteName}>{site.name}</span>
-                                    {site.rating && (
+                                    {site.rating != null && (
                                         <span className={styles.rating}>
                                             ⭐ {site.rating.toFixed(1)}
                                         </span>

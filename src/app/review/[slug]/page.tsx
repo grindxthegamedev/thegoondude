@@ -72,9 +72,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 <h1 className={styles.title}>{review?.title || site.name}</h1>
                 <p className={styles.excerpt}>{review?.excerpt || site.description}</p>
                 <div className={styles.ratingBox}>
-                    <span className={styles.ratingScore}>{site.rating.toFixed(1)}</span>
+                    <span className={styles.ratingScore}>{(site.rating ?? 0).toFixed(1)}</span>
                     <span className={styles.ratingMax}>/10</span>
-                    <Rating score={site.rating} showScore={false} />
+                    <Rating score={site.rating ?? 0} showScore={false} />
                 </div>
             </header>
 

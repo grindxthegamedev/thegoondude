@@ -47,7 +47,7 @@ export function Rating({
                     </span>
                 ))}
             </div>
-            {showScore && <span className={styles.score}>{score.toFixed(1)}</span>}
+            {showScore && <span className={styles.score}>{(score ?? 0).toFixed(1)}</span>}
             {showCount && count > 0 && (
                 <span className={styles.count}>({count})</span>
             )}
