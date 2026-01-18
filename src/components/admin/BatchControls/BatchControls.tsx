@@ -14,11 +14,22 @@ export default function BatchControls() {
     const [error, setError] = useState<string | null>(null);
 
     const handleStart = async () => {
+        console.log('[BatchControls] handleStart called');
         setActionLoading(true);
         setError(null);
         try {
+            console.log('[BatchControls] Calling startBatch...');
             const res = await startBatch();
-            if (!res.success) setError(res.error || 'Failed to start');
+            console.log('[BatchControls] startBatch response:', res);
+            if (!res.success) {
+                console.error('[BatchControls] Start failed:', res.error);
+                setError(res.error || 'Failed to start');
+            } else {
+                console.log('[BatchControls] Batch started successfully, jobId:', res.jobId);
+            }
+        } catch (err) {
+            console.error('[BatchControls] Exception in handleStart:', err);
+            setError('Exception occurred');
         } finally {
             setActionLoading(false);
         }

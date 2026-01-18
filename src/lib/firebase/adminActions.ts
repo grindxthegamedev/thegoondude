@@ -199,20 +199,27 @@ export async function setSiteProcessing(siteId: string): Promise<boolean> {
  * Start batch review process
  */
 export async function startBatchReview(): Promise<{ success: boolean; jobId?: string; error?: string }> {
+    console.log('[adminActions] startBatchReview called');
     try {
         const adminPassword = getAdminPassword();
+        console.log('[adminActions] adminPassword exists:', !!adminPassword);
         if (!adminPassword) return { success: false, error: 'No admin password' };
 
-        const response = await fetch(`${FUNCTIONS_URL}/adminStartBatchReview`, {
+        const url = `${FUNCTIONS_URL}/adminStartBatchReview`;
+        console.log('[adminActions] Fetching:', url);
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ adminPassword }),
         });
 
+        console.log('[adminActions] Response status:', response.status);
         const data = await response.json();
+        console.log('[adminActions] Response data:', data);
         return data;
     } catch (error) {
-        console.error('Failed to start batch:', error);
+        console.error('[adminActions] Failed to start batch:', error);
         return { success: false, error: 'Network error' };
     }
 }

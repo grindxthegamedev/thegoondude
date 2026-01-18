@@ -41,15 +41,38 @@ async function getSiteBySlug(slug: string) {
         if (!data?.[0]?.document?.fields) return null;
 
         const f = data[0].document.fields;
+
+        // Extract screenshot URL - try multiple paths
+        let screenshot: string | undefined;
+
+        // Path 1: crawlData.screenshotUrls[0]
+        const screenshotUrls = f.crawlData?.mapValue?.fields?.screenshotUrls?.arrayValue?.values;
+        if (screenshotUrls && screenshotUrls.length > 0) {
+            screenshot = screenshotUrls[0]?.stringValue;
+        }
+
+        // Path 2: Direct screenshotUrl field (legacy)
+        if (!screenshot && f.screenshotUrl?.stringValue) {
+            screenshot = f.screenshotUrl.stringValue;
+        }
+
+        // Path 3: crawlData.faviconUrl as fallback
+        if (!screenshot && f.crawlData?.mapValue?.fields?.faviconUrl?.stringValue) {
+            // Don't use favicon as OG image, it's too small
+        }
+
+        console.log(`[layout.tsx] Slug: ${slug}, Screenshot found:`, !!screenshot, screenshot?.substring(0, 50));
+
         return {
             name: f.name?.stringValue || '',
             description: f.description?.stringValue || '',
             rating: f.rating?.doubleValue || f.rating?.integerValue || 0,
-            screenshot: f.crawlData?.mapValue?.fields?.screenshotUrls?.arrayValue?.values?.[0]?.stringValue,
+            screenshot,
             title: f.review?.mapValue?.fields?.title?.stringValue,
             excerpt: f.review?.mapValue?.fields?.excerpt?.stringValue,
         };
-    } catch {
+    } catch (err) {
+        console.error('[layout.tsx] Error fetching site:', err);
         return null;
     }
 }
