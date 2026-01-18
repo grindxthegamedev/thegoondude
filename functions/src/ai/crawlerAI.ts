@@ -52,6 +52,25 @@ function getNavigationModel() {
 }
 
 /**
+ * External domains to never click on
+ */
+const EXTERNAL_BLACKLIST = [
+    'discord', 'twitter', 'facebook', 'instagram', 'telegram',
+    'reddit', 'youtube', 'tiktok', 'google', 'apple', 'login',
+    'signup', 'sign-up', 'register', 'account', 'oauth'
+];
+
+/**
+ * Filter out links/buttons that go to external blacklisted sites
+ */
+function filterBlacklisted(texts: string[]): string[] {
+    return texts.filter(t => {
+        const lower = t.toLowerCase();
+        return !EXTERNAL_BLACKLIST.some(bl => lower.includes(bl));
+    });
+}
+
+/**
  * Use AI to find the best element to click
  */
 export async function findBestActionWithAI(
@@ -59,13 +78,20 @@ export async function findBestActionWithAI(
     screenshot: Buffer
 ): Promise<AIActionDecision> {
     try {
-        const buttonTexts = pageState.buttons.slice(0, 15).map(b => b.text).join(', ');
-        const linkTexts = pageState.links.slice(0, 10).map(l => l.text).join(', ');
+        // Filter out external/blacklisted buttons and links
+        const safeButtons = filterBlacklisted(pageState.buttons.slice(0, 15).map(b => b.text));
+        const safeLinks = filterBlacklisted(
+            pageState.links.filter(l => l.isInternal).slice(0, 10).map(l => l.text)
+        );
+
+        const buttonTexts = safeButtons.join(', ');
+        const linkTexts = safeLinks.join(', ');
 
         const prompt = `You are navigating an adult website to find content for a review.
-Goal: Find the best element to click to reach content (videos, galleries, streams).
+Goal: Find the INTERNAL element to click to reach content (videos, galleries, streams).
+IMPORTANT: NEVER click on Discord, Twitter, social media, login, or signup links.
 Available buttons: [${buttonTexts}]
-Available links: [${linkTexts}]
+Available internal links: [${linkTexts}]
 Set target to the exact text, or null if already on content.`;
 
         const model = getNavigationModel();

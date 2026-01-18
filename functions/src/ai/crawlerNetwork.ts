@@ -20,12 +20,8 @@ const BLOCKED_PATTERNS = [
     'youtube.com/embed', 'player.vimeo',
 ];
 
-/** Resource types to block or limit */
-const BLOCKED_RESOURCE_TYPES = new Set(['media', 'font']);
-
-/** Track stylesheets to only allow first one */
-let stylesheetCount = 0;
-const MAX_STYLESHEETS = 2;
+/** Resource types to block (only heavy media) */
+const BLOCKED_RESOURCE_TYPES = new Set(['media']); // Removed 'font' - affects layout
 
 /**
  * Check if URL matches any blocked pattern
@@ -37,11 +33,9 @@ function isBlockedUrl(url: string): boolean {
 
 /**
  * Setup request interception on a page
- * Blocks ads, tracking, and limits heavy resources
+ * Blocks ads and tracking only - keeps styles/fonts for proper rendering
  */
 export async function setupRequestInterception(page: Page): Promise<void> {
-    stylesheetCount = 0; // Reset counter for each page
-
     await page.setRequestInterception(true);
 
     page.on('request', (request) => {
@@ -50,31 +44,21 @@ export async function setupRequestInterception(page: Page): Promise<void> {
 
         // Block known ad/tracking URLs
         if (isBlockedUrl(url)) {
-            logger.info(`Blocked: ${url.substring(0, 60)}...`);
             request.abort();
             return;
         }
 
-        // Block heavy resource types
+        // Block heavy media (videos, large files)
         if (BLOCKED_RESOURCE_TYPES.has(resourceType)) {
             request.abort();
             return;
         }
 
-        // Limit stylesheets (allow first 2)
-        if (resourceType === 'stylesheet') {
-            stylesheetCount++;
-            if (stylesheetCount > MAX_STYLESHEETS) {
-                request.abort();
-                return;
-            }
-        }
-
-        // Allow everything else
+        // Allow everything else (including stylesheets and fonts)
         request.continue();
     });
 
-    logger.info('Request interception enabled');
+    logger.info('Request interception enabled (ads/tracking blocked)');
 }
 
 /**
