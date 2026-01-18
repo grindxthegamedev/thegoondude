@@ -80,3 +80,19 @@ export function generateBreadcrumbSchema(
         })),
     };
 }
+
+/**
+ * Generate Organization schema for branding
+ */
+export function generateOrganizationSchema(): object {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: SITE_NAME,
+        url: BASE_URL,
+        logo: `${BASE_URL}/mascot.png`,
+        description: 'AI-powered adult site reviews and directory',
+        sameAs: [],
+    };
+}
+

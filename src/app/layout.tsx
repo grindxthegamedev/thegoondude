@@ -19,11 +19,23 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "TheGoonDude",
+    images: [
+      {
+        url: "/mascot.png",
+        width: 512,
+        height: 512,
+        alt: "TheGoonDude Mascot",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "TheGoonDude | AI-Powered NSFW Directory",
     description: "The 411 on adult sites. AI reviews that don't suck.",
+    images: ["/mascot.png"],
+  },
+  alternates: {
+    canonical: "https://thegoondude.com",
   },
 };
 

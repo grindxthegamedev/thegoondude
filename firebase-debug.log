@@ -1,0 +1,29 @@
+[debug] [2026-01-18T16:56:05.025Z] ----------------------------------------------------------------------
+[debug] [2026-01-18T16:56:05.027Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\mikke\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-01-18T16:56:05.028Z] CLI Version:   14.26.0
+[debug] [2026-01-18T16:56:05.028Z] Platform:      win32
+[debug] [2026-01-18T16:56:05.028Z] Node Version:  v22.14.0
+[debug] [2026-01-18T16:56:05.028Z] Time:          Sun Jan 18 2026 12:56:05 GMT-0400 (Bolivia Time)
+[debug] [2026-01-18T16:56:05.028Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-18T16:56:05.231Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-18T16:56:05.232Z] > authorizing via signed-in user (cursorestablisher@gmail.com)
+[debug] [2026-01-18T16:56:05.232Z] [iam] checking project lustlist411 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2026-01-18T16:56:05.233Z] Checked if tokens are valid: true, expires at: 1768758017605
+[debug] [2026-01-18T16:56:05.233Z] Checked if tokens are valid: true, expires at: 1768758017605
+[debug] [2026-01-18T16:56:05.234Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/lustlist411:testIamPermissions [none]
+[debug] [2026-01-18T16:56:05.234Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/lustlist411:testIamPermissions x-goog-quota-user=projects/lustlist411
+[debug] [2026-01-18T16:56:05.234Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/lustlist411:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2026-01-18T16:56:05.702Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/lustlist411:testIamPermissions 200
+[debug] [2026-01-18T16:56:05.702Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/lustlist411:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2026-01-18T16:56:05.702Z] Checked if tokens are valid: true, expires at: 1768758017605
+[debug] [2026-01-18T16:56:05.702Z] Checked if tokens are valid: true, expires at: 1768758017605
+[debug] [2026-01-18T16:56:05.702Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/lustlist411/serviceAccounts/lustlist411@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-01-18T16:56:05.702Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/lustlist411/serviceAccounts/lustlist411@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-01-18T16:56:06.142Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/lustlist411/serviceAccounts/lustlist411@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-01-18T16:56:06.142Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/lustlist411/serviceAccounts/lustlist411@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'lustlist411'...
+[info] 
+[info] i  deploying firestore, functions 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run build

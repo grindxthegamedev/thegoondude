@@ -1,8 +1,9 @@
 'use client';
 
 import Link from "next/link";
-import { Button, SiteListing, CategorySection, SiteListingsSkeletonGroup } from "@/components";
+import { Button, SiteListing, CategorySection, SiteListingsSkeletonGroup, JsonLd } from "@/components";
 import { useTopSites, useCategorySites } from "@/lib/hooks";
+import { generateWebsiteSchema, generateOrganizationSchema } from "@/lib/utils";
 import { CATEGORIES } from "@/lib/categories";
 import styles from "./page.module.css";
 
@@ -12,6 +13,10 @@ export default function Home() {
 
   return (
     <>
+      {/* Structured Data for SEO */}
+      <JsonLd data={generateWebsiteSchema()} />
+      <JsonLd data={generateOrganizationSchema()} />
+
       {/* Hero - SEO-optimized with keywords */}
       <section className={styles.hero}>
         <h1 className={styles.heroTitle}>
