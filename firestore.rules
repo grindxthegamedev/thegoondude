@@ -28,27 +28,30 @@ service cloud.firestore {
     // SITES COLLECTION
     // ========================================
     match /sites/{siteId} {
-      // Public read for published sites only
-      allow read: if resource.data.status == 'published' || isAdmin();
+      // Public read for published sites
+      // Anyone can read published sites, no auth required
+      allow read: if resource.data.status == 'published';
       
-      // Public submission with strict validation
+      // Admin can read ALL sites (including pending/draft)
+      allow read: if isAdmin();
+      
+      // Public submission with validation
       allow create: if request.resource.data.status == 'pending'
-        && request.resource.data.keys().hasAll(['url', 'name', 'category', 'description', 'slug', 'submittedAt'])
+        && request.resource.data.keys().hasAll(['url', 'name', 'category', 'description', 'submittedAt'])
         && request.resource.data.name.size() >= 2
         && request.resource.data.name.size() <= 100
         && request.resource.data.description.size() <= 500
         && isValidUrl(request.resource.data.url)
-        && isValidSlug(request.resource.data.slug)
         // Prevent injection of admin fields
         && !request.resource.data.keys().hasAny(['rating', 'review', 'crawlData', 'publishedAt']);
       
-      // Public voting - only votes field, with structure validation
+      // Public voting - only votes field
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
         && request.resource.data.votes.keys().hasOnly(['up', 'down'])
         && request.resource.data.votes.up is int
         && request.resource.data.votes.down is int;
       
-      // Admin full access (updates handled by Cloud Functions for safety)
+      // Admin full access
       allow update, delete: if isAdmin();
     }
     
@@ -60,7 +63,15 @@ service cloud.firestore {
       allow read: if isAuthenticated() && request.auth.uid == userId;
       // Admin can read all
       allow read: if isAdmin();
-      // No client writes - managed by Cloud Functions
+      // No client writes
+      allow write: if false;
+    }
+    
+    // ========================================
+    // STATS COLLECTION (public read)
+    // ========================================
+    match /stats/{statId} {
+      allow read: if true;
       allow write: if false;
     }
     
