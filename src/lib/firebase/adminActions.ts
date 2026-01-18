@@ -260,3 +260,25 @@ export async function getBatchStatus(jobId?: string) {
         return null;
     }
 }
+
+/**
+ * Seed top 100 sites
+ */
+export async function seedSites(): Promise<{ success: boolean; added: number; skipped: number }> {
+    try {
+        const adminPassword = getAdminPassword();
+        if (!adminPassword) return { success: false, added: 0, skipped: 0 };
+
+        const response = await fetch(`${FUNCTIONS_URL}/adminSeedSites`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword }),
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Failed to seed sites:', error);
+        return { success: false, added: 0, skipped: 0 };
+    }
+}

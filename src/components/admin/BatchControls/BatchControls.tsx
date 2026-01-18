@@ -45,6 +45,24 @@ export default function BatchControls() {
             <div className={styles.header}>
                 <h3 className={styles.title}>Automated Review Batch</h3>
                 <div className={styles.actions}>
+                    <button
+                        className={styles.button}
+                        onClick={async () => {
+                            if (!confirm('Seed top 100 sites?')) return;
+                            setActionLoading(true);
+                            // Import here to avoid circular dep issues in hooks
+                            const { seedSites } = await import('@/lib/firebase/adminActions');
+                            const res = await seedSites();
+                            alert(res.success ? `Added ${res.added} sites!` : 'Failed to seed');
+                            setActionLoading(false);
+                            window.location.reload();
+                        }}
+                        disabled={actionLoading || isRunning}
+                        style={{ marginRight: '1rem', background: '#eab308', color: '#000' }}
+                    >
+                        Seed Top 100
+                    </button>
+
                     {!isRunning ? (
                         <button
                             className={`${styles.button} ${styles.start}`}
