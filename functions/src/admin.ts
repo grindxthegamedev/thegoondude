@@ -125,3 +125,62 @@ export const adminUpdateSite = onRequest(adminConfig, async (req, res) => {
         res.status(500).json({ error: 'Failed to update site' });
     }
 });
+
+/**
+ * Get admin dashboard data (stats & pending sites)
+ */
+export const adminGetDashboard = onRequest(adminConfig, async (req, res) => {
+    res.set(corsHeaders);
+
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
+    try {
+        const { adminPassword } = req.body;
+
+        const secretValue = adminHashSecret.value() || undefined;
+        if (!adminPassword || !verifyPassword(adminPassword, secretValue)) {
+            res.status(401).json({ error: 'Invalid admin password' });
+            return;
+        }
+
+        // Parallel fetch for speed
+        const sitesSnapshot = await db.collection('sites').get();
+        // Note: For large DBs, this should be optimized. For now (MVP), fetching all is okay-ish or we verify separate queries.
+
+        let pendingCount = 0;
+        let publishedCount = 0;
+        const emails = new Set<string>();
+        const pendingSites: any[] = [];
+
+        sitesSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.status === 'pending') {
+                pendingCount++;
+                pendingSites.push({ id: doc.id, ...data });
+            } else if (data.status === 'published') {
+                publishedCount++;
+            }
+            if (data.submitterEmail) emails.add(data.submitterEmail);
+        });
+
+        // Sort pending by date desc
+        pendingSites.sort((a, b) => {
+            const da = a.submittedAt?.toDate?.() || new Date(0);
+            const db = b.submittedAt?.toDate?.() || new Date(0);
+            return db.getTime() - da.getTime();
+        });
+
+        const stats = {
+            pendingCount,
+            publishedCount,
+            totalSubmitters: emails.size,
+            totalRevenue: publishedCount * 20,
+        };
+
+        res.json({ success: true, stats, pendingSites });
+    } catch (error) {
+        logger.error('Admin dashboard error:', error);
+        res.status(500).json({ error: 'Failed to fetch dashboard data' });
+    }
+});

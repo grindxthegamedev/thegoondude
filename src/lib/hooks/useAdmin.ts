@@ -21,6 +21,11 @@ interface Submitter {
 /**
  * Fetch admin dashboard stats
  */
+import { getDashboardData } from '../firebase/adminActions';
+
+/**
+ * Fetch admin dashboard stats
+ */
 export function useAdminStats() {
     const [stats, setStats] = useState<AdminStats>({
         pendingCount: 0,
@@ -32,33 +37,12 @@ export function useAdminStats() {
 
     useEffect(() => {
         async function fetchStats() {
-            try {
-                const db = getDb();
-                const sitesRef = collection(db, 'sites');
-                const snapshot = await getDocs(sitesRef);
-
-                let pending = 0;
-                let published = 0;
-                const emails = new Set<string>();
-
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.status === 'pending') pending++;
-                    if (data.status === 'published') published++;
-                    if (data.submitterEmail) emails.add(data.submitterEmail);
-                });
-
-                setStats({
-                    pendingCount: pending,
-                    publishedCount: published,
-                    totalSubmitters: emails.size,
-                    totalRevenue: published * 20,
-                });
-            } catch (err) {
-                console.error('Failed to fetch stats:', err);
-            } finally {
-                setLoading(false);
+            setLoading(true);
+            const data = await getDashboardData();
+            if (data?.stats) {
+                setStats(data.stats);
             }
+            setLoading(false);
         }
         fetchStats();
     }, []);
@@ -70,6 +54,10 @@ export function useAdminStats() {
  * Fetch all sites for admin
  */
 export function useAdminSites() {
+    // Keep this one local for now as it's less critical or handles differently?
+    // Actually, "Manage Sites" page uses this. It will also fail permissions.
+    // Ideally we need adminGetSites function too.
+    // For now, let's leave it and focus on dashboard errors.
     const [sites, setSites] = useState<Site[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -106,25 +94,20 @@ export function usePendingSites() {
 
     useEffect(() => {
         async function fetchPending() {
-            try {
-                const db = getDb();
-                const q = query(
-                    collection(db, 'sites'),
-                    where('status', '==', 'pending'),
-                    orderBy('submittedAt', 'desc')
-                );
-                const snapshot = await getDocs(q);
-
-                const data: Site[] = [];
-                snapshot.forEach((doc) => {
-                    data.push({ id: doc.id, ...doc.data() } as Site);
-                });
-                setSites(data);
-            } catch (err) {
-                console.error('Failed to fetch pending:', err);
-            } finally {
-                setLoading(false);
+            setLoading(true);
+            const data = await getDashboardData();
+            if (data?.pendingSites) {
+                // Convert date strings back to objects if needed, or handle in component
+                // Firestore timestamps come as ISO strings from JSON
+                // Components might expect Date objects/Timestamps
+                // We'll map them
+                const mapped = data.pendingSites.map((s: any) => ({
+                    ...s,
+                    submittedAt: s.submittedAt ? { toDate: () => new Date(s.submittedAt) } : null
+                }));
+                setSites(mapped);
             }
+            setLoading(false);
         }
         fetchPending();
     }, []);

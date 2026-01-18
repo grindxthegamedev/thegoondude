@@ -65,15 +65,20 @@ export async function submitSite(data: SubmissionData): Promise<SubmissionResult
             description: sanitizedData.description,
             category: sanitizedData.category,
             tags: [],
-            rating: 0,
             status: 'pending',
             isNew: true,
             submittedAt: new Date(),
-        };
+            // Rating, review, and crawlData will be added by admin/crawler
+        } as any;
 
         const db = getDb();
         const docRef = await addDoc(collection(db, 'sites'), {
-            ...siteData,
+            url: siteData.url,
+            name: siteData.name,
+            slug: siteData.slug,
+            description: siteData.description,
+            category: siteData.category,
+            status: 'pending',
             submittedAt: Timestamp.now(),
             submitterEmail: sanitizedData.email,
         });

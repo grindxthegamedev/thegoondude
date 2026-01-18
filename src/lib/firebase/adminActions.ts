@@ -18,6 +18,33 @@ function getAdminPassword(): string | null {
 }
 
 /**
+ * Get dashboard stats and pending sites
+ */
+export async function getDashboardData() {
+    try {
+        const adminPassword = getAdminPassword();
+        if (!adminPassword) return null;
+
+        const response = await fetch(`${FUNCTIONS_URL}/adminGetDashboard`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            console.error('Fetch dashboard failed:', data.error);
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Failed to fetch dashboard:', error);
+        return null;
+    }
+}
+
+/**
  * Delete a site via Cloud Function
  */
 export async function deleteSite(siteId: string): Promise<boolean> {
