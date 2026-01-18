@@ -45,6 +45,31 @@ export async function getDashboardData() {
 }
 
 /**
+ * Get all sites for admin table
+ */
+export async function getAllSitesData() {
+    try {
+        const adminPassword = getAdminPassword();
+        if (!adminPassword) return null;
+
+        const response = await fetch(`${FUNCTIONS_URL}/adminGetSites`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword }),
+        });
+
+        const data = await response.json();
+        return response.ok ? data : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Delete a site via Cloud Function
+ */
+
+/**
  * Delete a site via Cloud Function
  */
 export async function deleteSite(siteId: string): Promise<boolean> {

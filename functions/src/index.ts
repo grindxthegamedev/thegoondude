@@ -24,7 +24,7 @@ setGlobalOptions({
 export { generateSiteReview, processFullReview } from './ai/endpoints';
 
 // Admin Operations
-export { adminDeleteSite, adminUpdateSite, adminGetDashboard } from './admin';
+export { adminDeleteSite, adminUpdateSite, adminGetDashboard, adminGetSites } from './admin';
 
 // Backlink Verification
 export { checkBacklink } from './backlink/checkBacklink';

@@ -21,7 +21,8 @@ interface Submitter {
 /**
  * Fetch admin dashboard stats
  */
-import { getDashboardData } from '../firebase/adminActions';
+import { getDashboardData, getAllSitesData } from '../firebase/adminActions';
+
 
 /**
  * Fetch admin dashboard stats
@@ -54,30 +55,22 @@ export function useAdminStats() {
  * Fetch all sites for admin
  */
 export function useAdminSites() {
-    // Keep this one local for now as it's less critical or handles differently?
-    // Actually, "Manage Sites" page uses this. It will also fail permissions.
-    // Ideally we need adminGetSites function too.
-    // For now, let's leave it and focus on dashboard errors.
     const [sites, setSites] = useState<Site[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchSites() {
-            try {
-                const db = getDb();
-                const q = query(collection(db, 'sites'), orderBy('submittedAt', 'desc'));
-                const snapshot = await getDocs(q);
-
-                const data: Site[] = [];
-                snapshot.forEach((doc) => {
-                    data.push({ id: doc.id, ...doc.data() } as Site);
-                });
-                setSites(data);
-            } catch (err) {
-                console.error('Failed to fetch sites:', err);
-            } finally {
-                setLoading(false);
+            setLoading(true);
+            const data = await getAllSitesData();
+            if (data?.sites) {
+                const mapped = data.sites.map((s: any) => ({
+                    ...s,
+                    submittedAt: s.submittedAt ? { toDate: () => new Date(s.submittedAt) } : null,
+                    publishedAt: s.publishedAt ? { toDate: () => new Date(s.publishedAt) } : null
+                }));
+                setSites(mapped);
             }
+            setLoading(false);
         }
         fetchSites();
     }, []);

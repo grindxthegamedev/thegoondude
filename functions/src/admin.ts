@@ -184,3 +184,36 @@ export const adminGetDashboard = onRequest(adminConfig, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch dashboard data' });
     }
 });
+
+/**
+ * Get all sites for admin table
+ */
+export const adminGetSites = onRequest(adminConfig, async (req, res) => {
+    res.set(corsHeaders);
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
+    try {
+        const { adminPassword } = req.body;
+        const secretValue = adminHashSecret.value() || undefined;
+        if (!adminPassword || !verifyPassword(adminPassword, secretValue)) {
+            res.status(401).json({ error: 'Invalid admin password' });
+            return;
+        }
+
+        const snapshot = await db.collection('sites').orderBy('submittedAt', 'desc').limit(100).get();
+        const sites = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Convert timestamps to ISO strings for JSON
+        const sanitizedSites = sites.map((s: any) => ({
+            ...s,
+            submittedAt: s.submittedAt?.toDate?.()?.toISOString() || s.submittedAt,
+            publishedAt: s.publishedAt?.toDate?.()?.toISOString() || s.publishedAt,
+        }));
+
+        res.json({ success: true, sites: sanitizedSites });
+    } catch (error) {
+        logger.error('Admin get sites error:', error);
+        res.status(500).json({ error: 'Failed to fetch sites' });
+    }
+});
