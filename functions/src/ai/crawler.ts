@@ -43,8 +43,61 @@ function isValidUrl(url: string): boolean {
     }
 }
 
+/** Check if running locally (emulator) */
+function isLocalDev(): boolean {
+    return process.env.FUNCTIONS_EMULATOR === 'true' ||
+        process.env.NODE_ENV === 'development';
+}
+
+/** Get local Chrome executable path */
+function getLocalChromePath(): string | undefined {
+    const paths = [
+        // Windows
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe',
+        // macOS
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        // Linux
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+    ];
+
+    const fs = require('fs');
+    for (const p of paths) {
+        if (p && fs.existsSync(p)) {
+            return p;
+        }
+    }
+    return undefined;
+}
+
 /** Launch browser with optimized settings */
 async function launchBrowser(): Promise<Browser> {
+    const isLocal = isLocalDev();
+
+    if (isLocal) {
+        // Local development - use local Chrome
+        const localPath = getLocalChromePath();
+        if (!localPath) {
+            throw new Error('Chrome not found. Please install Chrome or set FUNCTIONS_EMULATOR=false to use serverless Chromium.');
+        }
+        logger.info('Using local Chrome:', localPath);
+
+        return puppeteer.launch({
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+            ],
+            defaultViewport: { width: 1280, height: 800 },
+            executablePath: localPath,
+            headless: true,
+        });
+    }
+
+    // Production - use @sparticuz/chromium for Cloud Functions
+    logger.info('Using serverless Chromium');
     return puppeteer.launch({
         args: [
             ...chromium.args,

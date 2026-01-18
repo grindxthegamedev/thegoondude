@@ -1,0 +1,98 @@
+.section {
+    padding: var(--space-4);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+}
+
+.section:hover {
+    border-color: var(--border-hover);
+}
+
+.header {
+    margin-bottom: var(--space-3);
+}
+
+.titleLink {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    color: inherit;
+    margin-bottom: var(--space-1);
+}
+
+.titleLink:hover .title {
+    color: var(--primary);
+}
+
+.titleLink:hover .arrow {
+    transform: translateX(4px);
+    color: var(--primary);
+}
+
+.icon {
+    font-size: var(--text-2xl);
+}
+
+.title {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    margin: 0;
+    transition: color var(--transition-fast);
+}
+
+.arrow {
+    color: var(--text-muted);
+    margin-left: auto;
+    transition: all var(--transition-fast);
+}
+
+.description {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Sites List */
+.sites {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.siteCard {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.siteCard:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.siteName {
+    font-weight: var(--font-medium);
+}
+
+.rating {
+    font-size: var(--text-xs);
+    color: var(--warning);
+}
+
+.loading,
+.empty {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    padding: var(--space-2);
+}

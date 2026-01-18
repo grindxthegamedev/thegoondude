@@ -1,9 +1,11 @@
 /**
  * Admin Endpoints
- * Cloud Functions for admin operations (uses Admin SDK to bypass rules)
+ * Cloud Functions for admin operations
+ * Uses Admin SDK to bypass Firestore rules
  */
 
-import { onRequest } from 'firebase-functions/https';
+import { onRequest, HttpsOptions } from 'firebase-functions/https';
+import { defineSecret } from 'firebase-functions/params';
 import * as logger from 'firebase-functions/logger';
 import * as admin from 'firebase-admin';
 import * as crypto from 'crypto';
@@ -15,25 +17,41 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Admin password hash (same as frontend)
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_HASH ||
-    'b2b2f104d32c638903e151a9b20d6e27b41d8c0c84cf8458738f83ca2f1dd744';
+// Admin password from Secret Manager (production) or env (dev)
+const adminHashSecret = defineSecret('ADMIN_HASH');
+
+// Fallback hash for development
+const DEV_ADMIN_HASH = 'b2b2f104d32c638903e151a9b20d6e27b41d8c0c84cf8458738f83ca2f1dd744';
+
+// Lightweight function config
+const adminConfig: HttpsOptions = {
+    memory: '256MiB',
+    timeoutSeconds: 30,
+    cors: true,
+    secrets: [adminHashSecret],
+};
+
+// CORS headers
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
 /**
  * Verify admin password
  */
-function verifyPassword(password: string): boolean {
+function verifyPassword(password: string, secretHash?: string): boolean {
     const hash = crypto.createHash('sha256').update(password).digest('hex');
-    return hash === ADMIN_PASSWORD_HASH;
+    const expectedHash = secretHash || DEV_ADMIN_HASH;
+    return hash === expectedHash;
 }
 
 /**
  * Delete a site (admin only)
  */
-export const adminDeleteSite = onRequest(async (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+export const adminDeleteSite = onRequest(adminConfig, async (req, res) => {
+    res.set(corsHeaders);
 
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
@@ -46,19 +64,19 @@ export const adminDeleteSite = onRequest(async (req, res) => {
             return;
         }
 
-        if (!adminPassword || !verifyPassword(adminPassword)) {
+        // Get secret value (empty string in emulator)
+        const secretValue = adminHashSecret.value() || undefined;
+        if (!adminPassword || !verifyPassword(adminPassword, secretValue)) {
             res.status(401).json({ error: 'Invalid admin password' });
             return;
         }
 
-        // Check site exists
         const siteDoc = await db.collection('sites').doc(siteId).get();
         if (!siteDoc.exists) {
             res.status(404).json({ error: 'Site not found' });
             return;
         }
 
-        // Delete the site
         await db.collection('sites').doc(siteId).delete();
         logger.info('Site deleted by admin:', siteId);
 
@@ -72,10 +90,8 @@ export const adminDeleteSite = onRequest(async (req, res) => {
 /**
  * Update a site (admin only)
  */
-export const adminUpdateSite = onRequest(async (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+export const adminUpdateSite = onRequest(adminConfig, async (req, res) => {
+    res.set(corsHeaders);
 
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
@@ -88,19 +104,18 @@ export const adminUpdateSite = onRequest(async (req, res) => {
             return;
         }
 
-        if (!adminPassword || !verifyPassword(adminPassword)) {
+        const secretValue = adminHashSecret.value() || undefined;
+        if (!adminPassword || !verifyPassword(adminPassword, secretValue)) {
             res.status(401).json({ error: 'Invalid admin password' });
             return;
         }
 
-        // Check site exists
         const siteDoc = await db.collection('sites').doc(siteId).get();
         if (!siteDoc.exists) {
             res.status(404).json({ error: 'Site not found' });
             return;
         }
 
-        // Update the site
         await db.collection('sites').doc(siteId).update(updates);
         logger.info('Site updated by admin:', siteId);
 

@@ -1,100 +1,88 @@
 'use client';
 
 import Link from "next/link";
-import { Button, SiteListing } from "@/components";
-import { useTopSites, useNewSites } from "@/lib/hooks";
+import { Button, SiteListing, CategorySection, SiteListingsSkeletonGroup } from "@/components";
+import { useTopSites, useCategorySites } from "@/lib/hooks";
+import { CATEGORIES } from "@/lib/categories";
 import styles from "./page.module.css";
 
-const categories = [
-  "All", "Tubes", "Premium", "Cams", "Amateur",
-  "VR", "Hentai", "Dating", "Niche", "Free"
-];
-
 export default function Home() {
-  const { sites: topSites, loading: topLoading } = useTopSites(5);
-  const { sites: newSites, loading: newLoading } = useNewSites(5);
+  const { sites: topSites, loading: topLoading } = useTopSites(3);
+  const { categorySites, loading: catLoading } = useCategorySites(3);
 
   return (
     <>
-      {/* Hero */}
+      {/* Hero - SEO-optimized with keywords */}
       <section className={styles.hero}>
         <h1 className={styles.heroTitle}>
-          Your <span className={styles.heroAccent}>Cutest</span> NSFW Directory
+          The <span className={styles.heroAccent}>411</span> on Adult Sites
         </h1>
         <p className={styles.heroTagline}>
-          <span className={styles.heroEmoji}>💕</span> AI-powered reviews for the best adult sites.
-          No BS, just honest ratings.
+          AI-powered porn site reviews that don&apos;t suck.
+          Every adult site rated, roasted, and ranked honestly.
         </p>
+        <div className={styles.heroStats}>
+          <span className={styles.stat}>🔥 <strong>100+</strong> Sites Reviewed</span>
+          <span className={styles.statDivider}>•</span>
+          <span className={styles.stat}>🤖 <strong>AI-Powered</strong> Analysis</span>
+          <span className={styles.statDivider}>•</span>
+          <span className={styles.stat}>💯 <strong>100%</strong> Honest</span>
+        </div>
       </section>
 
-      {/* Category Nav */}
-      <nav className={styles.categoryNav}>
-        <div className={styles.categoryList}>
-          {categories.map((cat, i) => (
-            <Link
-              key={cat}
-              href={cat === "All" ? "/sites" : `/sites/${cat.toLowerCase()}`}
-              className={`${styles.categoryPill} ${i === 0 ? styles.active : ""}`}
-            >
-              {cat}
-            </Link>
+      {/* Category Directory with Sites - SEO Keyword-Rich */}
+      <section className={styles.directory}>
+        <div className={styles.directoryHeader}>
+          <h2 className={styles.sectionTitle}>📁 Browse Adult Sites by Category</h2>
+          <Link href="/sites" className={styles.viewAll}>View All Sites →</Link>
+        </div>
+        <p className={styles.directoryDesc}>
+          Explore our complete directory of reviewed porn sites, cam sites,
+          dating apps, and more. Each category features the best-rated sites
+          with honest AI reviews.
+        </p>
+        <div className={styles.categoryGrid}>
+          {CATEGORIES.map((cat) => (
+            <CategorySection
+              key={cat.id}
+              category={cat}
+              sites={categorySites[cat.id] || []}
+              loading={catLoading}
+            />
           ))}
         </div>
-      </nav>
+      </section>
 
-      {/* Main Content */}
-      <div className={styles.main}>
-        {/* Top Rated */}
-        <section>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>🔥 Top Rated</h2>
-            <Link href="/sites/top" className={styles.viewAll}>View all →</Link>
-          </div>
-          <div className={styles.listings}>
-            {topLoading ? (
-              <p className={styles.emptyState}>Loading top sites...</p>
-            ) : topSites.length > 0 ? (
-              topSites.map((site, i) => (
-                <SiteListing key={site.id} site={site} rank={i + 1} />
-              ))
-            ) : (
-              <p className={styles.emptyState}>No sites yet. Be the first to submit!</p>
-            )}
-          </div>
-        </section>
+      {/* Top Rated Preview */}
+      <section className={styles.topRated}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>🏆 Top Rated Adult Sites Right Now</h2>
+          <Link href="/sites?sortBy=rating" className={styles.viewAll}>See Full Rankings →</Link>
+        </div>
+        <div className={styles.listings}>
+          {topLoading ? (
+            <SiteListingsSkeletonGroup count={3} />
+          ) : topSites.length > 0 ? (
+            topSites.map((site, i) => (
+              <SiteListing key={site.id} site={site} rank={i + 1} />
+            ))
+          ) : (
+            <p className={styles.empty}>No sites yet. Be the first!</p>
+          )}
+        </div>
+      </section>
 
-        {/* New Additions */}
-        <section>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>✨ New Additions</h2>
-            <Link href="/sites/new" className={styles.viewAll}>View all →</Link>
-          </div>
-          <div className={styles.listings}>
-            {newLoading ? (
-              <p className={styles.emptyState}>Loading new sites...</p>
-            ) : newSites.length > 0 ? (
-              newSites.map((site) => (
-                <SiteListing key={site.id} site={site} />
-              ))
-            ) : (
-              <p className={styles.emptyState}>No new sites yet. Submit yours!</p>
-            )}
-          </div>
-        </section>
-
-        {/* Submit CTA */}
-        <section className={styles.submitCta}>
-          <h3 className={styles.submitTitle}>Got a site to share? 💖</h3>
-          <p className={styles.submitDesc}>
-            Submit your site for review and get featured in our directory.
+      {/* Submit CTA */}
+      <section className={styles.cta}>
+        <div className={styles.ctaContent}>
+          <h3 className={styles.ctaTitle}>Got an Adult Site Worth Reviewing?</h3>
+          <p className={styles.ctaText}>
+            Submit your porn site, cam site, or adult platform for a brutally honest AI review.
+            Free with backlink, $20 for priority review.
           </p>
-          <div className={styles.submitPrice}>🔗 Free with backlink</div>
-          <br />
-          <Button href="/submit" size="lg">
-            Submit Your Site →
-          </Button>
-        </section>
-      </div>
+          <Button href="/submit" size="lg">Submit Your Site →</Button>
+        </div>
+      </section>
     </>
   );
 }

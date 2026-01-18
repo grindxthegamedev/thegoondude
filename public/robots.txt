@@ -1,0 +1,27 @@
+# TheGoonDude - Robots.txt
+# AI-Powered Adult Site Directory
+
+User-agent: *
+Allow: /
+Allow: /sites
+Allow: /review/
+Allow: /about
+Allow: /contact
+Allow: /submit
+
+# Block admin and API routes
+Disallow: /admin/
+Disallow: /api/
+
+# Block search result pages (duplicate content)
+Disallow: /sites?q=*
+
+# Block utility pages
+Disallow: /_next/
+Disallow: /static/
+
+# Crawl delay for politeness
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://thegoondude.com/sitemap.xml

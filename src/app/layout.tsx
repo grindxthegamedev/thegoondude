@@ -1,19 +1,29 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { AgeGate } from "@/components/ui";
+import { AgeGate, ErrorBoundary } from "@/components/ui";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TheGoonDude | The Cutest NSFW Directory",
-  description: "Discover the best adult websites with AI-powered reviews. Honest, cute, and always up-to-date. Your go-to 411 for NSFW sites.",
-  keywords: ["nsfw", "adult sites", "directory", "reviews", "porn sites", "411"],
+  title: {
+    default: "TheGoonDude | AI-Powered NSFW Directory",
+    template: "%s | TheGoonDude",
+  },
+  description: "The 411 on adult sites. AI-powered reviews that don't suck. Every site rated, roasted, and ranked. Your brutally honest NSFW directory.",
+  keywords: ["nsfw directory", "adult site reviews", "porn site ratings", "AI reviews", "411 adult"],
   robots: "index, follow",
+  metadataBase: new URL("https://thegoondude.com"),
   openGraph: {
-    title: "TheGoonDude | The Cutest NSFW Directory",
-    description: "Discover the best adult websites with AI-powered reviews.",
+    title: "TheGoonDude | AI-Powered NSFW Directory",
+    description: "The 411 on adult sites. AI reviews that don't suck.",
     type: "website",
     locale: "en_US",
+    siteName: "TheGoonDude",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TheGoonDude | AI-Powered NSFW Directory",
+    description: "The 411 on adult sites. AI reviews that don't suck.",
   },
 };
 
@@ -27,14 +37,17 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0D0D0D" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
         <AgeGate />
         <Header />
-        <main>{children}</main>
+        <ErrorBoundary>
+          <main>{children}</main>
+        </ErrorBoundary>
         <Footer />
       </body>
     </html>
   );
 }
-

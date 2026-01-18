@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Input, Badge } from '@/components';
+import { Button, Input, AdminStats, PendingTable } from '@/components';
 import { verifyAdminPassword, isAdminAuthenticated, setAdminAuthenticated } from '@/lib/auth/adminAuth';
 import { useAdminStats, usePendingSites } from '@/lib/hooks';
 import styles from './page.module.css';
@@ -26,7 +26,6 @@ export default function AdminPage() {
         const valid = await verifyAdminPassword(password);
         if (valid) {
             setAdminAuthenticated(true);
-            // Store password for Cloud Function calls
             sessionStorage.setItem('admin_password', password);
             setAuthenticated(true);
         } else {
@@ -58,12 +57,6 @@ export default function AdminPage() {
         );
     }
 
-    const formatDate = (date: Date | { toDate: () => Date } | undefined) => {
-        if (!date) return 'N/A';
-        const d = typeof date === 'object' && 'toDate' in date ? date.toDate() : new Date(date);
-        return d.toLocaleDateString();
-    };
-
     return (
         <div className={styles.page}>
             <header className={styles.header}>
@@ -71,54 +64,13 @@ export default function AdminPage() {
                 <Button onClick={handleLogout} variant="ghost" size="sm">Logout</Button>
             </header>
 
-            <div className={styles.stats}>
-                <div className={styles.stat}>
-                    <div className={styles.statLabel}>Pending Reviews</div>
-                    <div className={styles.statValue}>{statsLoading ? '...' : stats.pendingCount}</div>
-                </div>
-                <div className={styles.stat}>
-                    <div className={styles.statLabel}>Published Sites</div>
-                    <div className={styles.statValue}>{statsLoading ? '...' : stats.publishedCount}</div>
-                </div>
-                <div className={styles.stat}>
-                    <div className={styles.statLabel}>Submitters</div>
-                    <div className={styles.statValue}>{statsLoading ? '...' : stats.totalSubmitters}</div>
-                </div>
-                <div className={styles.stat}>
-                    <div className={styles.statLabel}>Revenue</div>
-                    <div className={styles.statValue}>${statsLoading ? '...' : stats.totalRevenue}</div>
-                </div>
-            </div>
+            <AdminStats stats={stats} loading={statsLoading} />
 
             <section className={styles.section}>
                 <div className={styles.sectionHeader}>
                     <h2 className={styles.sectionTitle}>🕐 Pending Review Queue</h2>
                 </div>
-                <table className={styles.table}>
-                    <thead className={styles.tableHead}>
-                        <tr><th>Site</th><th>Category</th><th>Submitted</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody className={styles.tableBody}>
-                        {pendingLoading ? (
-                            <tr><td colSpan={4} style={{ textAlign: 'center' }}>Loading...</td></tr>
-                        ) : pendingSites.length > 0 ? (
-                            pendingSites.slice(0, 5).map((site) => (
-                                <tr key={site.id}>
-                                    <td><a href={site.url} target="_blank" rel="noopener">{site.name}</a></td>
-                                    <td><Badge variant="default">{site.category}</Badge></td>
-                                    <td>{formatDate(site.submittedAt)}</td>
-                                    <td>
-                                        <button className={`${styles.actionBtn} ${styles.approve}`}>Approve</button>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                                No pending submissions
-                            </td></tr>
-                        )}
-                    </tbody>
-                </table>
+                <PendingTable sites={pendingSites} loading={pendingLoading} />
             </section>
 
             <section className={styles.section}>

@@ -6,7 +6,7 @@ import { isAdminAuthenticated } from '@/lib/auth/adminAuth';
 import { useAdminSites } from '@/lib/hooks';
 import { approveSite, rejectSite, deleteSite } from '@/lib/firebase/adminActions';
 import { triggerFullPipeline, triggerReviewGeneration } from '@/lib/firebase/aiActions';
-import styles from '../page.module.css';
+import styles from './page.module.css';
 
 export default function AdminSitesPage() {
     const [authenticated, setAuthenticated] = useState(false);

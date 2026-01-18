@@ -1,0 +1,22 @@
+.container {
+    margin-top: var(--space-8);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--border);
+}
+
+.title {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    font-family: var(--font-heading);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-4);
+}
+
+/* Compact mode overrides for SiteListing if needed, 
+   but ideally SiteListing handles 'compact' prop internally */

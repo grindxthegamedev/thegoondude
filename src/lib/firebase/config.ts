@@ -44,7 +44,7 @@ export function getDb(): Firestore {
         db = getFirestore(getFirebaseApp());
         // Connect to emulator in dev
         if (isDev && !emulatorsConnected && typeof window !== 'undefined') {
-            connectFirestoreEmulator(db, 'localhost', 8080);
+            connectFirestoreEmulator(db, 'localhost', 8081);
             emulatorsConnected = true;
         }
     }
@@ -57,7 +57,7 @@ export function getAuthInstance(): Auth {
         // Connect to emulator in dev
         if (isDev && typeof window !== 'undefined') {
             try {
-                connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+                connectAuthEmulator(auth, 'http://localhost:9100', { disableWarnings: true });
             } catch {
                 // Already connected
             }

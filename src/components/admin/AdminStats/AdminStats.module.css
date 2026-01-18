@@ -1,0 +1,25 @@
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+}
+
+.stat {
+    background: var(--bg-surface);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.statLabel {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-2);
+}
+
+.statValue {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+}

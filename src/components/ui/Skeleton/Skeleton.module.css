@@ -1,0 +1,65 @@
+.skeleton {
+    background: linear-gradient(90deg,
+            var(--bg-surface) 0%,
+            var(--bg-elevated) 50%,
+            var(--bg-surface) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+.text {
+    height: 1rem;
+    width: 100%;
+}
+
+.card {
+    height: 120px;
+    width: 100%;
+    border-radius: var(--radius-lg);
+}
+
+.listing {
+    height: 72px;
+    width: 100%;
+    border-radius: var(--radius-lg);
+}
+
+.circle {
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+/* Listing skeleton layout */
+.listingWrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.listingContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.listingsGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}

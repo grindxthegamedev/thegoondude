@@ -3,7 +3,7 @@
  * Frontend functions to trigger AI review generation
  */
 
-const FUNCTIONS_URL = process.env.NEXT_PUBLIC_FUNCTIONS_URL || 'http://localhost:5001/lustlist411/us-central1';
+const FUNCTIONS_URL = process.env.NEXT_PUBLIC_FUNCTIONS_URL || 'http://localhost:5002/lustlist411/us-central1';
 
 export interface ReviewResult {
     success: boolean;

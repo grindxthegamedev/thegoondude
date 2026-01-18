@@ -25,9 +25,10 @@ export interface SiteData {
 interface SiteListingProps {
     site: SiteData;
     rank?: number;
+    compact?: boolean;
 }
 
-export function SiteListing({ site, rank }: SiteListingProps) {
+export function SiteListing({ site, rank, compact = false }: SiteListingProps) {
     const isTop3 = rank !== undefined && rank <= 3;
 
     // Extract thumbnail and favicon from crawlData if not at top level
@@ -35,7 +36,7 @@ export function SiteListing({ site, rank }: SiteListingProps) {
     const faviconUrl = site.faviconUrl || site.crawlData?.faviconUrl;
 
     return (
-        <article className={styles.listing}>
+        <article className={`${styles.listing} ${compact ? styles.compact : ''}`}>
             {rank !== undefined && (
                 <div className={`${styles.rank} ${isTop3 ? styles.top3 : ""}`}>
                     #{rank}
@@ -66,12 +67,11 @@ export function SiteListing({ site, rank }: SiteListingProps) {
                         {site.name}
                     </Link>
                     <div className={styles.badges}>
+                        {site.rating >= 9 && <Badge variant="hot">Hot</Badge>}
                         {site.isNew && <Badge variant="new">New</Badge>}
-                        {site.isPremium && <Badge variant="premium">Premium</Badge>}
-                        {site.isFree && <Badge variant="free">Free</Badge>}
                     </div>
                 </div>
-                <p className={styles.description}>{site.description}</p>
+                {!compact && <p className={styles.description}>{site.description}</p>}
                 <div className={styles.meta}>
                     <Rating score={site.rating} size="sm" />
                     <span className={styles.category}>{site.category}</span>
@@ -84,7 +84,7 @@ export function SiteListing({ site, rank }: SiteListingProps) {
                 rel="noopener noreferrer"
                 className={styles.visitBtn}
             >
-                Visit →
+                {compact ? '→' : 'Visit →'}
             </a>
         </article>
     );

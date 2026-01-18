@@ -90,7 +90,7 @@ async function storeCheckResult(urlHash: string, result: CheckResponse): Promise
  * Cloud Function: Check if site has backlink
  */
 export const checkBacklink = onCall<CheckRequest>(
-    { cors: true, maxInstances: 10 },
+    { cors: true, maxInstances: 10, memory: '1GiB', timeoutSeconds: 120 },
     async (request): Promise<CheckResponse> => {
         const { url } = request.data;
 

@@ -1,0 +1,68 @@
+.card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    color: inherit;
+}
+
+.card:hover {
+    border-color: var(--primary);
+    background: var(--bg-elevated);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-glow);
+}
+
+.icon {
+    font-size: var(--text-3xl);
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+}
+
+.label {
+    font-family: var(--font-heading);
+    font-size: var(--text-base);
+    font-weight: var(--font-bold);
+    margin: 0 0 var(--space-1);
+    color: var(--text-primary);
+}
+
+.description {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.count {
+    font-size: var(--text-xs);
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-medium);
+    flex-shrink: 0;
+}
+
+.arrow {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    transition: transform var(--transition-fast);
+}
+
+.card:hover .arrow {
+    color: var(--primary);
+    transform: translateX(4px);
+}

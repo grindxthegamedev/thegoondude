@@ -22,6 +22,10 @@ export interface Site {
     submittedAt?: Date;
     publishedAt?: Date;
     crawlData?: CrawlData;
+    votes?: {
+        up: number;
+        down: number;
+    };
 }
 
 export interface CrawlData {

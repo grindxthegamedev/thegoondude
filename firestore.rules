@@ -3,37 +3,87 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Sites collection
-    match /sites/{siteId} {
-      // Allow reading all sites (admin panel needs this)
-      allow read: if true;
-      
-      // Public submission (create) if status is 'pending'
-      allow create: if request.resource.data.status == 'pending'
-        && request.resource.data.keys().hasAll(['url', 'name', 'category', 'description', 'slug'])
-        && request.resource.data.name.size() > 0
-        && request.resource.data.url.size() > 0;
-      
-      // Admin can update and delete sites
-      allow update, delete: if request.auth != null
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() 
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
-    // Users collection - public read for submitters list
+    function isValidUrl(url) {
+      return url.matches('^https?://.*');
+    }
+    
+    function isValidSlug(slug) {
+      return slug.matches('^[a-z0-9-]+$') && slug.size() >= 3 && slug.size() <= 100;
+    }
+
+    // ========================================
+    // SITES COLLECTION
+    // ========================================
+    match /sites/{siteId} {
+      // Public read for published sites only
+      allow read: if resource.data.status == 'published' || isAdmin();
+      
+      // Public submission with strict validation
+      allow create: if request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasAll(['url', 'name', 'category', 'description', 'slug', 'submittedAt'])
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.description.size() <= 500
+        && isValidUrl(request.resource.data.url)
+        && isValidSlug(request.resource.data.slug)
+        // Prevent injection of admin fields
+        && !request.resource.data.keys().hasAny(['rating', 'review', 'crawlData', 'publishedAt']);
+      
+      // Public voting - only votes field, with structure validation
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
+        && request.resource.data.votes.keys().hasOnly(['up', 'down'])
+        && request.resource.data.votes.up is int
+        && request.resource.data.votes.down is int;
+      
+      // Admin full access (updates handled by Cloud Functions for safety)
+      allow update, delete: if isAdmin();
+    }
+    
+    // ========================================
+    // USERS COLLECTION
+    // ========================================
     match /users/{userId} {
-      allow read: if true;
+      // Users can only read their own document
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Admin can read all
+      allow read: if isAdmin();
+      // No client writes - managed by Cloud Functions
       allow write: if false;
     }
     
-    // Payments - Cloud Functions only
+    // ========================================
+    // PAYMENTS COLLECTION (Cloud Functions only)
+    // ========================================
     match /payments/{paymentId} {
       allow read, write: if false;
     }
     
-    // Categories - public read
+    // ========================================
+    // RATE LIMITS COLLECTION (Cloud Functions only)
+    // ========================================
+    match /rateLimits/{limitId} {
+      allow read, write: if false;
+    }
+    
+    // ========================================
+    // CATEGORIES COLLECTION
+    // ========================================
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
   }
 }
