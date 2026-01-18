@@ -32,20 +32,33 @@ export function CategorySection({ category, sites, loading }: CategorySectionPro
                 {loading ? (
                     <div className={styles.loading}>Loading...</div>
                 ) : sites.length > 0 ? (
-                    sites.map((site) => (
-                        <Link
-                            key={site.id}
-                            href={`/review/${site.slug}`}
-                            className={styles.siteCard}
-                        >
-                            <span className={styles.siteName}>{site.name}</span>
-                            {site.rating && (
-                                <span className={styles.rating}>
-                                    ⭐ {site.rating.toFixed(1)}
-                                </span>
-                            )}
-                        </Link>
-                    ))
+                    sites.map((site) => {
+                        const thumbnail = site.thumbnail || site.crawlData?.screenshotUrls?.[0] || site.crawlData?.screenshotUrl;
+
+                        return (
+                            <Link
+                                key={site.id}
+                                href={`/review/${site.slug}`}
+                                className={styles.siteCard}
+                            >
+                                <div className={styles.cardThumb}>
+                                    {thumbnail ? (
+                                        <img src={thumbnail} alt={site.name} className={styles.thumbImg} />
+                                    ) : (
+                                        <div className={styles.thumbPlaceholder} />
+                                    )}
+                                </div>
+                                <div className={styles.cardContent}>
+                                    <span className={styles.siteName}>{site.name}</span>
+                                    {site.rating && (
+                                        <span className={styles.rating}>
+                                            ⭐ {site.rating.toFixed(1)}
+                                        </span>
+                                    )}
+                                </div>
+                            </Link>
+                        );
+                    })
                 ) : (
                     <p className={styles.empty}>No sites yet</p>
                 )}

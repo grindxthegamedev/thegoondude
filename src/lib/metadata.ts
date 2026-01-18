@@ -54,12 +54,18 @@ export function generateSitesMetadata(category?: string, query?: string): Metada
         return {
             title: `${categoryTitle} Sites`,
             description: `Browse the best ${categoryTitle.toLowerCase()} sites. AI-reviewed and ranked. Find your next favorite.`,
+            openGraph: {
+                images: [{ url: 'https://thegoondude.com/mascot.png', width: 512, height: 512, alt: 'TheGoonDude Mascot' }],
+            },
         };
     }
 
     return {
         title: 'Browse All Sites',
         description: 'Explore our complete directory of AI-reviewed adult sites. Sorted by rating, filtered by category.',
+        openGraph: {
+            images: [{ url: 'https://thegoondude.com/mascot.png', width: 512, height: 512, alt: 'TheGoonDude Mascot' }],
+        },
     };
 }
 
