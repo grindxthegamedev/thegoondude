@@ -168,7 +168,7 @@ export const adminSeedSites = onRequest(
                     name: site.name,
                     url: site.url,
                     slug: slug,
-                    description: `Automatically seeded review for ${site.name}.`,
+                    description: '', // Empty - AI will generate during review
                     category: site.category,
                     submitterEmail: 'admin-seed@thegoondude.com',
                     submittedAt: admin.firestore.FieldValue.serverTimestamp(),

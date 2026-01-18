@@ -21,8 +21,8 @@ const adminHashSecret = defineSecret('ADMIN_HASH');
 const DEV_ADMIN_HASH = 'b2b2f104d32c638903e151a9b20d6e27b41d8c0c84cf8458738f83ca2f1dd744';
 
 const batchConfig: HttpsOptions = {
-    memory: '256MiB',
-    timeoutSeconds: 60,
+    memory: '2GiB',
+    timeoutSeconds: 540, // Max timeout for heavy batch processing
     cors: true,
     secrets: [adminHashSecret],
 };
@@ -87,13 +87,17 @@ export const adminStartBatchReview = onRequest(batchConfig, async (req, res) => 
 
         logger.info('Batch job started:', jobRef.id);
 
-        // Start processor in background (fire and forget)
-        // Note: In production, use Cloud Tasks or Pub/Sub for longer jobs
-        runBatchProcessor(jobRef.id).catch(err => {
+        // IMPORTANT: Await the processor so it doesn't die when response is sent
+        // This means the HTTP response will be delayed until batch completes/times out
+        // For long jobs, consider using Cloud Tasks instead
+        try {
+            await runBatchProcessor(jobRef.id);
+            logger.info('Batch processor completed for job:', jobRef.id);
+        } catch (err) {
             logger.error('Batch processor error:', err);
-        });
+        }
 
-        res.json({ success: true, jobId: jobRef.id, message: 'Batch processing started' });
+        res.json({ success: true, jobId: jobRef.id, message: 'Batch processing completed' });
 
     } catch (error) {
         logger.error('Start batch error:', error);

@@ -27,8 +27,11 @@ export const RATE_LIMITS = {
     review: { maxRequests: 10, windowMs: 60 * 60 * 1000 },           // 10 per hour
     vote: { maxRequests: 30, windowMs: 60 * 1000 },                  // 30 per minute
     search: { maxRequests: 60, windowMs: 60 * 1000 },                // 60 per minute
-    aiGeneration: { maxRequests: 3, windowMs: 60 * 60 * 1000 },      // 3 per hour (expensive)
+    aiGeneration: { maxRequests: 100, windowMs: 60 * 60 * 1000 },    // 100 per hour (increased for batch)
 } as const;
+
+// Keys that bypass rate limiting entirely (e.g., batch processor, admin)
+export const BYPASS_KEYS = ['batch-processor', 'admin-internal'] as const;
 
 /**
  * Check and update rate limit for a given key
@@ -41,6 +44,15 @@ export async function checkRateLimit(
     action: keyof typeof RATE_LIMITS,
     config?: Partial<RateLimitConfig>
 ): Promise<RateLimitResult> {
+    // Allow bypass for admin/batch operations
+    if (BYPASS_KEYS.includes(key as any)) {
+        return {
+            allowed: true,
+            remaining: 9999,
+            resetAt: new Date(Date.now() + 60 * 60 * 1000),
+        };
+    }
+
     const limits = { ...RATE_LIMITS[action], ...config };
     const docId = `${action}:${key}`;
     const docRef = db.collection(COLLECTION).doc(docId);
