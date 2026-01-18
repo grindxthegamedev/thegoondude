@@ -1,0 +1,172 @@
+.container {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    color: #eee;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: #fff;
+}
+
+.button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.start {
+    background: #22c55e;
+    color: #fff;
+}
+
+.start:hover:not(:disabled) {
+    background: #16a34a;
+}
+
+.stop {
+    background: #ef4444;
+    color: #fff;
+}
+
+.stop:hover:not(:disabled) {
+    background: #dc2626;
+}
+
+.statusPanel {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.statusRow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.statusItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.running { color: #3b82f6; }
+.completed { color: #22c55e; }
+.stopped { color: #f59e0b; }
+.failed { color: #ef4444; }
+
+.success { color: #22c55e; }
+.errorCount { color: #ef4444; }
+
+.progressBar {
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progressFill {
+    height: 100%;
+    background: #3b82f6;
+    transition: width 0.3s ease;
+}
+
+.currentAction {
+    font-size: 0.875rem;
+    color: #ccc;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.currentAction::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.errorLog {
+    margin-top: 1rem;
+    border-top: 1px solid #333;
+    padding-top: 1rem;
+}
+
+.errorLog h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    color: #ef4444;
+}
+
+.errorLog ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.8rem;
+    color: #bbb;
+}
+
+.errorLog li {
+    margin-bottom: 0.25rem;
+}
+
+.loading {
+    padding: 2rem;
+    text-align: center;
+    color: #888;
+}

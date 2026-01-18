@@ -6,6 +6,7 @@ import { isAdminAuthenticated } from '@/lib/auth/adminAuth';
 import { useAdminSites } from '@/lib/hooks';
 import { approveSite, rejectSite, deleteSite } from '@/lib/firebase/adminActions';
 import { triggerFullPipeline, triggerReviewGeneration } from '@/lib/firebase/aiActions';
+import BatchControls from '@/components/admin/BatchControls/BatchControls';
 import styles from './page.module.css';
 
 export default function AdminSitesPage() {
@@ -103,6 +104,8 @@ export default function AdminSitesPage() {
                     {message.text}
                 </div>
             )}
+
+            <BatchControls />
 
             <section className={styles.section}>
                 <table className={styles.table}>

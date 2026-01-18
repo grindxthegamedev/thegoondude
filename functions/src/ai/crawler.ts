@@ -1,6 +1,6 @@
 /**
  * Crawler Agent - The Orchestrator
- * Implements Observe → Decide → Act loop with AI enhancements
+ * Human-like crawling with AI enhancements
  */
 
 import puppeteer, { Browser, Page } from 'puppeteer-core';
@@ -9,10 +9,14 @@ import * as logger from 'firebase-functions/logger';
 
 import { getPageState } from './crawlerDOM';
 import { detectBlocker, findBestAction, isContentPage } from './crawlerDecide';
-import { delay, dismissBlocker, captureScreenshot, extractSEO, clickByText } from './crawlerAct';
+import { captureScreenshot, extractSEO, clickByText } from './crawlerAct';
 import { setupRequestInterception } from './crawlerNetwork';
 import { retryableNavigate } from './crawlerRetry';
-import { findBestActionWithAI, isContentPageWithAI, aiGuidedScroll } from './crawlerAI';
+import { findBestActionWithAI, isContentPageWithAI } from './crawlerAI';
+import {
+    randomDelay, waitForPageReady, humanScroll,
+    dismissOverlay, isSameDomain, shouldAvoidUrl, setHumanFingerprint
+} from './crawlerHuman';
 
 export interface SEOData {
     title: string;
@@ -46,13 +50,13 @@ function isValidUrl(url: string): boolean {
     }
 }
 
-/** Check if running locally (emulator) */
+/** Check if running locally */
 function isLocalDev(): boolean {
     return process.env.FUNCTIONS_EMULATOR === 'true' ||
         process.env.NODE_ENV === 'development';
 }
 
-/** Get local Chrome executable path */
+/** Get local Chrome path */
 function getLocalChromePath(): string | undefined {
     const paths = [
         'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -65,26 +69,24 @@ function getLocalChromePath(): string | undefined {
     return paths.find(p => p && fs.existsSync(p));
 }
 
-/** Launch browser with optimized settings */
+/** Launch browser */
 async function launchBrowser(): Promise<Browser> {
     const isLocal = isLocalDev();
 
     if (isLocal) {
         const localPath = getLocalChromePath();
         if (!localPath) throw new Error('Chrome not found');
-        logger.info('Using local Chrome:', localPath);
-
+        logger.info('Using local Chrome');
         return puppeteer.launch({
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
             defaultViewport: { width: 1280, height: 800 },
             executablePath: localPath,
             headless: true,
         });
     }
 
-    logger.info('Using serverless Chromium');
     return puppeteer.launch({
-        args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
         defaultViewport: { width: 1280, height: 800 },
         executablePath: await chromium.executablePath(),
         headless: true,
@@ -92,46 +94,55 @@ async function launchBrowser(): Promise<Browser> {
 }
 
 /**
- * Main crawl function with AI enhancements
+ * Main crawl function - human-like behavior
  */
 export async function crawlSite(url: string): Promise<CrawlResult> {
     if (!isValidUrl(url)) throw new Error('Invalid URL');
 
-    logger.info('Starting intelligent crawl:', url);
+    logger.info('Starting human-like crawl:', url);
     const startTime = Date.now();
     const browser = await launchBrowser();
     const screenshots: Buffer[] = [];
+    const targetDomain = new URL(url).hostname;
 
     try {
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(45000);
 
-        // Enable request interception (blocks ads/tracking)
+        // Set up human-like fingerprint
+        await setHumanFingerprint(page);
         await setupRequestInterception(page);
 
         // Navigate with retry
         const navigated = await retryableNavigate(page, url, { maxRetries: 3 });
-        if (!navigated) throw new Error('Navigation failed after retries');
+        if (!navigated) throw new Error('Navigation failed');
 
-        // Handle blockers
-        await handleBlockers(page);
+        // Wait for page to fully render (CSS, fonts, etc.)
+        await waitForPageReady(page);
 
-        // Capture homepage
+        // Dismiss any initial overlays (age gates, cookies, popups)
+        await handleOverlays(page);
+
+        // Capture homepage screenshot
         const homeShot = await captureScreenshot(page);
-        if (homeShot) screenshots.push(homeShot);
-        logger.info('Homepage captured');
+        if (homeShot) {
+            screenshots.push(homeShot);
+            logger.info('Homepage captured');
+        }
 
-        // Find content with AI fallback
-        await findAndCaptureContent(page, screenshots, homeShot);
+        // Human-like scroll to see more content
+        await humanScroll(page, 400);
+        await randomDelay(500, 1000);
 
-        // AI-guided scrolling
-        if (homeShot && screenshots.length < MAX_SCREENSHOTS) {
-            await aiGuidedScroll(page, homeShot, async () => {
-                if (screenshots.length < MAX_SCREENSHOTS) {
-                    const shot = await captureScreenshot(page);
-                    if (shot) screenshots.push(shot);
-                }
-            });
+        // Try to find and navigate to content
+        await exploreContent(page, screenshots, homeShot, targetDomain);
+
+        // Final scroll and capture
+        if (screenshots.length < MAX_SCREENSHOTS) {
+            await humanScroll(page, 300);
+            await randomDelay(300, 600);
+            const scrollShot = await captureScreenshot(page);
+            if (scrollShot) screenshots.push(scrollShot);
         }
 
         // Extract SEO data
@@ -151,59 +162,100 @@ export async function crawlSite(url: string): Promise<CrawlResult> {
     }
 }
 
-/** Handle page blockers (age gates, cookies, etc.) */
-async function handleBlockers(page: Page): Promise<void> {
-    for (let attempts = 0; attempts < 3; attempts++) {
+/** Handle all blocking overlays */
+async function handleOverlays(page: Page): Promise<void> {
+    for (let i = 0; i < 3; i++) {
         const pageState = await getPageState(page);
         const blocker = detectBlocker(pageState);
 
-        if (!blocker) {
-            logger.info('No blockers detected');
-            break;
+        if (!blocker) break;
+
+        logger.info(`Overlay detected: ${blocker.type}`);
+
+        // Try specific dismiss first
+        let dismissed = false;
+        for (const text of blocker.actionTexts) {
+            if (await clickByText(page, text)) {
+                dismissed = true;
+                await randomDelay(1000, 1500);
+                break;
+            }
         }
 
-        logger.info(`Blocker detected: ${blocker.type}`);
-        const dismissed = await dismissBlocker(page, blocker);
-
+        // Fall back to generic dismissal
         if (!dismissed) {
-            await clickByText(page, 'Enter') || await clickByText(page, 'Accept');
+            await dismissOverlay(page);
         }
 
-        await delay(1500);
+        await randomDelay(500, 1000);
     }
 }
 
-/** Find and capture content with AI fallback */
-async function findAndCaptureContent(page: Page, screenshots: Buffer[], homeShot: Buffer | null): Promise<void> {
+/** Explore content like a human would */
+async function exploreContent(
+    page: Page,
+    screenshots: Buffer[],
+    homeShot: Buffer | null,
+    targetDomain: string
+): Promise<void> {
+    if (screenshots.length >= MAX_SCREENSHOTS) return;
+
     const pageState = await getPageState(page);
 
-    // Try heuristic first
+    // Try heuristic action first
     let action = findBestAction(pageState);
 
-    // Fall back to AI if heuristic fails
+    // Fall back to AI if needed
     if (!action && homeShot) {
         const aiDecision = await findBestActionWithAI(pageState, homeShot);
         if (aiDecision.target && aiDecision.confidence !== 'low') {
-            action = { targetText: aiDecision.target, reason: aiDecision.reason, priority: 'medium' };
+            action = {
+                targetText: aiDecision.target,
+                reason: aiDecision.reason,
+                priority: 'medium'
+            };
         }
     }
 
-    if (action) {
-        logger.info(`Action: ${action.targetText} (${action.reason})`);
+    if (!action) return;
 
-        if (await clickByText(page, action.targetText)) {
-            await delay(2000);
+    logger.info(`Exploring: ${action.targetText} (${action.reason})`);
 
-            // Check if content page
-            const newShot = await captureScreenshot(page);
-            if (newShot) {
-                const newState = await getPageState(page);
-                const isContent = isContentPage(newState) || await isContentPageWithAI(newShot);
+    // Click and wait like a human
+    if (await clickByText(page, action.targetText)) {
+        await randomDelay(1500, 2500);
+        await waitForPageReady(page);
 
-                if (isContent) {
-                    logger.info('Content page reached!');
-                    screenshots.push(newShot);
-                }
+        // Check if we navigated away from target domain
+        const currentUrl = page.url();
+        if (!isSameDomain(currentUrl, `https://${targetDomain}`)) {
+            logger.warn('Left target domain, going back');
+            await page.goBack();
+            await waitForPageReady(page);
+            return;
+        }
+
+        // Avoid login/signup pages
+        if (shouldAvoidUrl(currentUrl)) {
+            logger.warn('Hit login/auth page, going back');
+            await page.goBack();
+            await waitForPageReady(page);
+            return;
+        }
+
+        // Dismiss any new overlays
+        await dismissOverlay(page);
+
+        // Capture content page
+        const contentShot = await captureScreenshot(page);
+        if (contentShot) {
+            const newState = await getPageState(page);
+            const isContent = isContentPage(newState) ||
+                (homeShot && await isContentPageWithAI(contentShot));
+
+            if (isContent) {
+                logger.info('Content page captured!');
+                screenshots.push(contentShot);
             }
         }
     }

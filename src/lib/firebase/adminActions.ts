@@ -194,3 +194,69 @@ export async function setSiteProcessing(siteId: string): Promise<boolean> {
         return false;
     }
 }
+
+/**
+ * Start batch review process
+ */
+export async function startBatchReview(): Promise<{ success: boolean; jobId?: string; error?: string }> {
+    try {
+        const adminPassword = getAdminPassword();
+        if (!adminPassword) return { success: false, error: 'No admin password' };
+
+        const response = await fetch(`${FUNCTIONS_URL}/adminStartBatchReview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword }),
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Failed to start batch:', error);
+        return { success: false, error: 'Network error' };
+    }
+}
+
+/**
+ * Stop batch review process
+ */
+export async function stopBatchReview(jobId?: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const adminPassword = getAdminPassword();
+        if (!adminPassword) return { success: false, error: 'No admin password' };
+
+        const response = await fetch(`${FUNCTIONS_URL}/adminStopBatchReview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword, jobId }),
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Failed to stop batch:', error);
+        return { success: false, error: 'Network error' };
+    }
+}
+
+/**
+ * Get batch job status
+ */
+export async function getBatchStatus(jobId?: string) {
+    try {
+        const adminPassword = getAdminPassword();
+        if (!adminPassword) return null;
+
+        const response = await fetch(`${FUNCTIONS_URL}/adminGetBatchStatus`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword, jobId }),
+        });
+
+        const data = await response.json();
+        return data.success ? data.job : null;
+    } catch (error) {
+        console.error('Failed to get batch status:', error);
+        return null;
+    }
+}

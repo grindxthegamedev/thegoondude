@@ -32,6 +32,9 @@ export { checkBacklink } from './backlink/checkBacklink';
 // Payment Processing
 export { createPayment, ipnWebhook } from './payments';
 
+// Batch Processing
+export { adminStartBatchReview, adminStopBatchReview, adminGetBatchStatus } from './batch/batchEndpoints';
+
 // ==========================================
 // UTILITY ENDPOINTS
 // ==========================================

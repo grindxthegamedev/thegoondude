@@ -156,3 +156,59 @@ export function useSubmitters() {
 
     return { submitters, loading };
 }
+
+/**
+ * Fetch batch job status
+ */
+import { getBatchStatus, startBatchReview, stopBatchReview } from '../firebase/adminActions';
+
+export function useBatchStatus() {
+    const [job, setJob] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function fetchStatus() {
+            setLoading(true);
+            const data = await getBatchStatus();
+            if (isMounted) {
+                setJob(data);
+                setLoading(false);
+            }
+        }
+
+        fetchStatus();
+
+        // Poll every 3 seconds if job is running
+        const interval = setInterval(() => {
+            if (job?.status === 'running') {
+                getBatchStatus().then(data => {
+                    if (isMounted && data) setJob(data);
+                });
+            }
+        }, 3000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [refreshTrigger, job?.status]);
+
+    const refresh = () => setRefreshTrigger(p => p + 1);
+
+    const startBatch = async () => {
+        const res = await startBatchReview();
+        if (res.success) refresh();
+        return res;
+    };
+
+    const stopBatch = async () => {
+        const res = await stopBatchReview(job?.id);
+        if (res.success) refresh();
+        return res;
+    };
+
+    return { job, loading, startBatch, stopBatch, refresh };
+}
