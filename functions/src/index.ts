@@ -35,6 +35,8 @@ export { createPayment, ipnWebhook } from './payments';
 // Batch Processing
 export { adminStartBatchReview, adminStopBatchReview, adminGetBatchStatus } from './batch/batchEndpoints';
 export { adminSeedSites } from './batch/seedSites';
+export { migrateDescriptions } from './batch/migrateDescriptions';
+export { triggerAutoReview } from './batch/autoReviewEndpoints';
 
 // ==========================================
 // UTILITY ENDPOINTS
