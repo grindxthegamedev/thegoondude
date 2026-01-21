@@ -4,19 +4,13 @@ import { useState } from 'react';
 import { Button, Input, Textarea, Select } from '@/components';
 import { isValidUrl, isValidSiteName, isValidDescription } from '@/lib/utils/validation';
 import { submitSite, checkBacklinkEligibility, BacklinkCheckResult } from '@/lib/firebase/submissions';
+import { CATEGORIES as APP_CATEGORIES } from '@/lib/categories';
 import styles from './page.module.css';
 
-const CATEGORIES = [
-    { value: 'tubes', label: 'Tubes' },
-    { value: 'premium', label: 'Premium' },
-    { value: 'cams', label: 'Cam Sites' },
-    { value: 'amateur', label: 'Amateur' },
-    { value: 'vr', label: 'VR' },
-    { value: 'hentai', label: 'Hentai' },
-    { value: 'dating', label: 'Dating' },
-    { value: 'niche', label: 'Niche/Fetish' },
-    { value: 'free', label: 'Free' },
-];
+const CATEGORIES = APP_CATEGORIES.map(cat => ({
+    value: cat.id,
+    label: cat.label
+}));
 
 interface FormData {
     url: string;
@@ -79,20 +73,22 @@ export default function SubmitPage() {
     const handleCheckBacklink = async () => {
         if (!validateUrl()) return;
 
-        // TEMP: Skip backlink check for testing
-        setStatus('eligible');
-        setMessage('✓ Testing mode: Backlink bypassed');
-        setBacklinkResult({ eligible: true, backlinkFound: true, message: 'Testing' });
-        return;
-
-        /* Original:
         setStatus('checking');
         setMessage('');
-        const result = await checkBacklinkEligibility(formData.url);
-        setBacklinkResult(result);
-        if (result.eligible) { setStatus('eligible'); setMessage(result.message); }
-        else { setStatus('error'); setMessage(result.message); }
-        */
+        try {
+            const result = await checkBacklinkEligibility(formData.url);
+            setBacklinkResult(result);
+            if (result.eligible) {
+                setStatus('eligible');
+                setMessage(result.message);
+            } else {
+                setStatus('error');
+                setMessage(result.message);
+            }
+        } catch (err) {
+            setStatus('error');
+            setMessage('An unexpected error occurred. Please try again.');
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

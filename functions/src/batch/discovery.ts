@@ -22,6 +22,12 @@ const CATEGORY_MAP: Record<string, string> = {
     'amateur': 'best-amateur-homemade-porn-sites',
     'premium': 'best-hd-porn-sites',
     'interactive': 'best-interactive-sex-games-sites',
+    'vr': 'best-vr-porn-sites',
+    'onlyfans': 'best-onlyfans-alternatives',
+    'dating': 'best-adult-dating-sites',
+    'niche': 'best-fetish-porn-sites',
+    'free': 'best-fully-free-porn-sites',
+    'studio': 'best-classic-porn-studios',
 };
 
 /** Check if running locally */

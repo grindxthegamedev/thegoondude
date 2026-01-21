@@ -23,6 +23,7 @@ export const CATEGORIES: Category[] = [
     { id: 'niche', label: 'Niche/Fetish', icon: '🔗', description: 'Specialized content', slug: 'niche' },
     { id: 'games', label: 'Games', icon: '🎮', description: 'Adult gaming', slug: 'games' },
     { id: 'free', label: 'Free Sites', icon: '🆓', description: 'No payment required', slug: 'free' },
+    { id: 'studio', label: 'Studio', icon: '🏢', description: 'Professional studios', slug: 'studio' },
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {
