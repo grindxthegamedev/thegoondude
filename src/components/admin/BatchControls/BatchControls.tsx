@@ -61,7 +61,6 @@ export default function BatchControls() {
                         onClick={async () => {
                             if (!confirm('Seed top 100 sites?')) return;
                             setActionLoading(true);
-                            // Import here to avoid circular dep issues in hooks
                             const { seedSites } = await import('@/lib/firebase/adminActions');
                             const res = await seedSites();
                             alert(res.success ? `Added ${res.added} sites!` : 'Failed to seed');
@@ -69,9 +68,43 @@ export default function BatchControls() {
                             window.location.reload();
                         }}
                         disabled={actionLoading || isRunning}
-                        style={{ marginRight: '1rem', background: '#eab308', color: '#000' }}
+                        style={{ marginRight: '1rem', background: '#3b82f6', color: '#fff' }}
                     >
                         Seed Top 100
+                    </button>
+
+                    <button
+                        className={styles.button}
+                        onClick={async () => {
+                            if (!confirm('Start autonomous discovery and review for 500 sites? This will take a long time.')) return;
+                            setActionLoading(true);
+                            const { triggerAutoReview } = await import('@/lib/firebase/adminActions');
+                            const res = await triggerAutoReview();
+                            alert(res.success ? `Auto-review completed! ${res.successCount} sites reviewed.` : `Failed: ${res.error}`);
+                            setActionLoading(false);
+                            window.location.reload();
+                        }}
+                        disabled={actionLoading || isRunning}
+                        style={{ marginRight: '1rem', background: 'var(--primary)', color: '#fff' }}
+                    >
+                        Auto-Review (500)
+                    </button>
+
+                    <button
+                        className={styles.button}
+                        onClick={async () => {
+                            if (!confirm('Fix all legacy descriptions? This replaces "Automatically seeded..." with AI content.')) return;
+                            setActionLoading(true);
+                            const { migrateDescriptions } = await import('@/lib/firebase/adminActions');
+                            const res = await migrateDescriptions();
+                            alert(res.success ? `Updated ${res.updated} sites!` : `Failed: ${res.error}`);
+                            setActionLoading(false);
+                            window.location.reload();
+                        }}
+                        disabled={actionLoading || isRunning}
+                        style={{ marginRight: '1rem', background: '#4b5563', color: '#fff' }}
+                    >
+                        Fix Legacy Tags
                     </button>
 
                     {!isRunning ? (

@@ -289,3 +289,60 @@ export async function seedSites(): Promise<{ success: boolean; added: number; sk
         return { success: false, added: 0, skipped: 0 };
     }
 }
+
+/**
+ * Trigger autonomous discovery and review (500 sites)
+ */
+export async function triggerAutoReview(): Promise<{
+    success: boolean;
+    processedCount?: number;
+    successCount?: number;
+    errorCount?: number;
+    message?: string;
+    error?: string;
+}> {
+    try {
+        const adminPassword = getAdminPassword();
+        if (!adminPassword) return { success: false, error: 'No admin password' };
+
+        const response = await fetch(`${FUNCTIONS_URL}/triggerAutoReview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword }),
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Failed to trigger auto-review:', error);
+        return { success: false, error: 'Network error' };
+    }
+}
+
+/**
+ * Migrate descriptions (Replace "Automatically seeded" with AI content)
+ */
+export async function migrateDescriptions(): Promise<{
+    success: boolean;
+    updated: number;
+    skipped: number;
+    noReview: number;
+    error?: string;
+}> {
+    try {
+        const adminPassword = getAdminPassword();
+        if (!adminPassword) return { success: false, updated: 0, skipped: 0, noReview: 0, error: 'No admin password' };
+
+        const response = await fetch(`${FUNCTIONS_URL}/migrateDescriptions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword }),
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Failed to migrate descriptions:', error);
+        return { success: false, updated: 0, skipped: 0, noReview: 0, error: 'Network error' };
+    }
+}

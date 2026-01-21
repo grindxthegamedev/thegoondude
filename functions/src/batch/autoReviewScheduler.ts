@@ -195,6 +195,11 @@ export async function runAutoReview(): Promise<{
     let processedCount = 0;
 
     try {
+        // Phase 0: Discovery (Ensure we have enough sites)
+        const { runAutoDiscovery } = await import('./discovery.js');
+        const added = await runAutoDiscovery(100);
+        logger.info(`Discovery phase added ${added} new sites`);
+
         // Get pending sites
         const sitesSnapshot = await db.collection('sites')
             .where('status', '==', 'pending')
